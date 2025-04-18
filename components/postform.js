@@ -274,40 +274,128 @@ export default function PostForm() {
     }
   };
 
-  // Rating Scale Component
-  const RatingScale = ({ label, value, onChange, leftLabel, rightLabel }) => (
-    <div className="mb-4">
-      <label className="block text-sm font-medium mb-2">
-        {label} <span className="text-red-500">*</span>
-      </label>
-      <div className="flex items-center gap-4">
-        <span className="text-sm text-gray-500 w-16">{leftLabel}</span>
-        <div className="flex-1 flex justify-center gap-1">
-          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
-            <button
-              key={num}
-              type="button"
-              onClick={() => onChange(num)}
-              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors
-                ${value === num 
-                  ? 'bg-yellow-500 text-white' 
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-            >
-              {num}
-            </button>
-          ))}
+  // Star Rating Component
+  const StarRating = ({ label, value, onChange }) => {
+    const ratingDescriptors = {
+      1: "Yikes",
+      2: "Meh",
+      3: "Solid",
+      4: "Crack",
+      5: "F***in Slaying"
+    };
+
+    return (
+      <div className="mb-4">
+        <label className="block text-sm font-medium mb-2">
+          {label} <span className="text-red-500">*</span>
+        </label>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <button
+                key={star}
+                type="button"
+                onClick={() => onChange(star)}
+                className="focus:outline-none"
+              >
+                <svg
+                  className={`w-8 h-8 ${star <= value ? 'text-yellow-500' : 'text-gray-300'}`}
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                </svg>
+              </button>
+            ))}
+          </div>
+          {value > 0 && (
+            <span className="text-lg font-medium text-gray-700">
+              {ratingDescriptors[value]}
+            </span>
+          )}
         </div>
-        <span className="text-sm text-gray-500 w-16 text-right">{rightLabel}</span>
+        {formSubmitted && value === 0 && (
+          <p className="text-sm text-red-500 mt-1">Please select a rating</p>
+        )}
       </div>
-      {formSubmitted && value === 0 && (
-        <p className="text-sm text-red-500 mt-1">Please select a rating</p>
-      )}
-    </div>
-  );
+    );
+  };
+
+  // Rating Scale Component
+  const RatingScale = ({ label, value, onChange }) => {
+    const ratingDescriptors = {
+      length: {
+        1: "Tiny",
+        2: "Shorty",
+        3: "Regular",
+        4: "Long Boi",
+        5: "Giraffe"
+      },
+      thickness: {
+        1: "Paper",
+        2: "Slim",
+        3: "Standard",
+        4: "Thicc",
+        5: "Chonky"
+      },
+      crispiness: {
+        1: "Mushy",
+        2: "Soft",
+        3: "Crisp",
+        4: "Crunchy",
+        5: "Crackling"
+      },
+      saltiness: {
+        1: "Bland",
+        2: "Mild",
+        3: "Seasoned",
+        4: "Salty",
+        5: "Ocean"
+      },
+      darkness: {
+        1: "Pale",
+        2: "Light",
+        3: "Golden",
+        4: "Toasted",
+        5: "Burnt"
+      }
+    };
+
+    return (
+      <div className="mb-4">
+        <label className="block text-sm font-medium mb-2">
+          {label} <span className="text-red-500">*</span>
+        </label>
+        <div className="flex items-center gap-4">
+          <div className="flex gap-1">
+            {[1, 2, 3, 4, 5].map((num) => (
+              <button
+                key={num}
+                type="button"
+                onClick={() => onChange(num)}
+                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors
+                  ${value === num 
+                    ? 'bg-yellow-500 text-white' 
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+              />
+            ))}
+          </div>
+          {value > 0 && (
+            <span className="text-lg font-medium text-gray-700">
+              {ratingDescriptors[label.toLowerCase()][value]}
+            </span>
+          )}
+        </div>
+        {formSubmitted && value === 0 && (
+          <p className="text-sm text-red-500 mt-1">Please select a rating</p>
+        )}
+      </div>
+    );
+  };
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-2xl mx-auto p-4">
+    <form onSubmit={handleSubmit} className="max-w-2xl mx-auto p-4 sm:p-6">
       {error && (
         <div className="mb-8 p-4 bg-red-100 text-red-700 rounded">
           {error}
@@ -315,7 +403,7 @@ export default function PostForm() {
       )}
 
       <div className="mb-8">
-        <label className="block text-sm font-medium mb-2">
+        <label className="block text-base font-medium mb-3">
           Fries Image <span className="text-red-500">*</span>
         </label>
         <div className="relative">
@@ -323,7 +411,6 @@ export default function PostForm() {
             ref={imageInputRef}
             type="file"
             accept="image/*"
-            capture="environment"
             onChange={handleImageChange}
             className="hidden"
             required
@@ -331,15 +418,15 @@ export default function PostForm() {
           {!preview ? (
             <div 
               onClick={() => imageInputRef.current?.click()}
-              className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-yellow-500 transition-colors"
+              className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-yellow-500 transition-colors"
             >
               <div className="flex flex-col items-center justify-center">
-                <svg className="w-12 h-12 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-16 h-16 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
-                <p className="text-sm text-gray-600">Tap to take a photo or upload an image</p>
-                <p className="text-xs text-gray-500 mt-1">PNG, JPG up to 5MB</p>
+                <p className="text-base text-gray-600">Tap to take a photo or choose from library</p>
+                <p className="text-sm text-gray-500 mt-2">PNG, JPG up to 5MB</p>
               </div>
             </div>
           ) : (
@@ -352,18 +439,18 @@ export default function PostForm() {
               <button
                 type="button"
                 onClick={removeImage}
-                className="absolute top-2 right-2 bg-white/80 hover:bg-white text-gray-800 rounded-full p-2 shadow-lg"
+                className="absolute top-3 right-3 bg-white/80 hover:bg-white text-gray-800 rounded-full p-3 shadow-lg"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
               <button
                 type="button"
                 onClick={() => imageInputRef.current?.click()}
-                className="absolute bottom-2 right-2 bg-white/80 hover:bg-white text-gray-800 rounded-full p-2 shadow-lg"
+                className="absolute bottom-3 right-3 bg-white/80 hover:bg-white text-gray-800 rounded-full p-3 shadow-lg"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
@@ -373,8 +460,16 @@ export default function PostForm() {
         </div>
       </div>
 
+      <div className="mb-8">
+        <StarRating
+          label="Rating"
+          value={formData.overall}
+          onChange={(value) => setFormData({ ...formData, overall: value })}
+        />
+      </div>
+
       <div className="mb-8 relative">
-        <label className="block text-sm font-medium mb-2">
+        <label className="block text-base font-medium mb-3">
           Location Name <span className="text-red-500">*</span>
         </label>
         <input
@@ -385,41 +480,41 @@ export default function PostForm() {
             setFormData({ ...formData, locationName: e.target.value });
             setShowSuggestions(true);
           }}
-          className="w-full p-2 border rounded"
+          className="w-full p-4 text-base border rounded-lg"
           placeholder="Type to search"
           required
         />
       </div>
 
       <div className="mb-8">
-        <label className="block text-sm font-medium mb-2">Name on Menu (Optional)</label>
+        <label className="block text-base font-medium mb-3">Name on Menu (Optional)</label>
         <input
           type="text"
           value={formData.menuName}
           onChange={(e) => setFormData({ ...formData, menuName: e.target.value })}
-          className="w-full p-2 border rounded"
+          className="w-full p-4 text-base border rounded-lg"
           placeholder="Crazy loaded truffle fries"
         />
-        <p className="text-sm text-gray-500 mt-1">If establishment has multiple types of fries on their menu</p>
+        <p className="text-sm text-gray-500 mt-2">If establishment has multiple types of fries on their menu</p>
       </div>
 
       <div className="mb-8">
-        <label className="block text-sm font-medium mb-2">
+        <label className="block text-base font-medium mb-3">
           Type <span className="text-red-500">*</span>
         </label>
-        <div className="flex flex-wrap gap-2 p-2 border rounded min-h-[42px]">
+        <div className="flex flex-wrap gap-2 p-3 border rounded-lg min-h-[52px]">
           {formData.types.map(type => {
             const typeInfo = allFryTypes.find(t => t.value === type);
             return (
               <span
                 key={type}
-                className="flex items-center gap-1 px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm"
+                className="flex items-center gap-1 px-3 py-2 bg-yellow-100 text-yellow-800 rounded-full text-base"
               >
                 {typeInfo?.label}
                 <button
                   type="button"
                   onClick={() => removeTag(type)}
-                  className="ml-1 text-yellow-600 hover:text-yellow-800"
+                  className="ml-1 text-yellow-600 hover:text-yellow-800 text-lg"
                 >
                   ×
                 </button>
@@ -434,16 +529,16 @@ export default function PostForm() {
               onChange={handleTagInputChange}
               onKeyDown={handleKeyDown}
               onFocus={() => setShowSuggestions(true)}
-              className="w-full outline-none"
+              className="w-full outline-none text-base"
               placeholder={formData.types.length === 0 ? "Type to select tags" : ""}
             />
             {showSuggestions && suggestions.length > 0 && (
-              <div className="absolute z-10 w-full mt-1 bg-white border rounded shadow-lg">
+              <div className="absolute z-10 w-full mt-1 bg-white border rounded-lg shadow-lg">
                 {suggestions.map((type) => (
                   <div
                     key={type.value}
                     onClick={() => addTag(type)}
-                    className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                    className="px-4 py-3 hover:bg-gray-100 cursor-pointer text-base"
                   >
                     {type.label}
                   </div>
@@ -454,61 +549,45 @@ export default function PostForm() {
         </div>
       </div>
 
-      <RatingScale
-        label="Length"
-        value={formData.length}
-        onChange={(value) => setFormData({ ...formData, length: value })}
-        leftLabel="Short"
-        rightLabel="Long"
-      />
+      <div className="space-y-8">
+        <RatingScale
+          label="Length"
+          value={formData.length}
+          onChange={(value) => setFormData({ ...formData, length: value })}
+        />
 
-      <RatingScale
-        label="Thickness"
-        value={formData.thickness}
-        onChange={(value) => setFormData({ ...formData, thickness: value })}
-        leftLabel="Thin"
-        rightLabel="Thick"
-      />
+        <RatingScale
+          label="Thickness"
+          value={formData.thickness}
+          onChange={(value) => setFormData({ ...formData, thickness: value })}
+        />
 
-      <RatingScale
-        label="Crispiness"
-        value={formData.crispiness}
-        onChange={(value) => setFormData({ ...formData, crispiness: value })}
-        leftLabel="Soft"
-        rightLabel="Crispy"
-      />
+        <RatingScale
+          label="Crispiness"
+          value={formData.crispiness}
+          onChange={(value) => setFormData({ ...formData, crispiness: value })}
+        />
 
-      <RatingScale
-        label="Saltiness"
-        value={formData.saltiness}
-        onChange={(value) => setFormData({ ...formData, saltiness: value })}
-        leftLabel="Mild"
-        rightLabel="Salty"
-      />
+        <RatingScale
+          label="Saltiness"
+          value={formData.saltiness}
+          onChange={(value) => setFormData({ ...formData, saltiness: value })}
+        />
 
-      <RatingScale
-        label="Darkness"
-        value={formData.darkness}
-        onChange={(value) => setFormData({ ...formData, darkness: value })}
-        leftLabel="Light"
-        rightLabel="Dark"
-      />
-
-      <RatingScale
-        label="Overall Rating"
-        value={formData.overall}
-        onChange={(value) => setFormData({ ...formData, overall: value })}
-        leftLabel="Poor"
-        rightLabel="Excellent"
-      />
+        <RatingScale
+          label="Darkness"
+          value={formData.darkness}
+          onChange={(value) => setFormData({ ...formData, darkness: value })}
+        />
+      </div>
 
       <div className="mt-12 mb-8">
-        <label className="block text-sm font-medium mb-2">Comment (Optional)</label>
+        <label className="block text-base font-medium mb-3">Comment (Optional)</label>
         <textarea
           value={formData.description}
           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-          className="w-full p-2 border rounded"
-          rows="3"
+          className="w-full p-4 text-base border rounded-lg"
+          rows="4"
           placeholder="Describe the fries, any special seasonings, etc."
         />
       </div>
@@ -516,7 +595,7 @@ export default function PostForm() {
       <button
         type="submit"
         disabled={loading}
-        className="w-full bg-yellow-500 text-white py-3 px-4 rounded hover:bg-yellow-600 disabled:opacity-50"
+        className="w-full bg-yellow-500 text-white py-4 px-6 rounded-lg text-lg font-medium hover:bg-yellow-600 disabled:opacity-50"
       >
         {loading ? 'Submitting...' : 'Submit Post'}
       </button>
