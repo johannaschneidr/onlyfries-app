@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { storage, db } from '../lib/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { collection, addDoc } from 'firebase/firestore';
@@ -20,7 +20,42 @@ export default function PostForm() {
     darkness: 5,
     overall: 5
   });
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const locationInputRef = useRef(null);
   const router = useRouter();
+
+  // Initialize Google Places Autocomplete
+  // This effect runs once when the component mounts
+  // It creates an autocomplete instance attached to the location input
+  // The autocomplete is restricted to establishments in New York City area
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.google) {
+      // Define bounds for New York City area
+      const nycBounds = new window.google.maps.LatLngBounds(
+        new window.google.maps.LatLng(40.4774, -74.2591), // Southwest corner (including outer boroughs)
+        new window.google.maps.LatLng(40.9176, -73.7004)  // Northeast corner
+      );
+
+      const autocomplete = new window.google.maps.places.Autocomplete(
+        locationInputRef.current,
+        {
+          types: ['establishment'],
+          bounds: nycBounds,
+          strictBounds: true // This ensures results are strictly within the bounds
+        }
+      );
+
+      // Handle place selection from autocomplete
+      autocomplete.addListener('place_changed', () => {
+        const place = autocomplete.getPlace();
+        if (place.name) {
+          setFormData(prev => ({ ...prev, locationName: place.name }));
+          setShowSuggestions(false);
+        }
+      });
+    }
+  }, []);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -152,14 +187,19 @@ export default function PostForm() {
         )}
       </div>
 
-      <div className="mb-4">
+      {/* Google Maps Places Autocomplete Input */}
+      <div className="mb-4 relative">
         <label className="block text-sm font-medium mb-2">Location Name</label>
         <input
+          ref={locationInputRef}
           type="text"
           value={formData.locationName}
-          onChange={(e) => setFormData({ ...formData, locationName: e.target.value })}
+          onChange={(e) => {
+            setFormData({ ...formData, locationName: e.target.value });
+            setShowSuggestions(true);
+          }}
           className="w-full p-2 border rounded"
-          placeholder="Restaurant/Bar name"
+          placeholder="Search for a restaurant/bar"
           required
         />
       </div>
