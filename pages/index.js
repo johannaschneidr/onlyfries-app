@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import Navbar from '../components/navbar';
+import UploadButton from '../components/uploadbutton';
 import { db } from '../lib/firebase';
 import { collection, addDoc, query, orderBy, onSnapshot, getDocs } from 'firebase/firestore';
 
@@ -46,18 +47,11 @@ export default function Home() {
     <>
       <Navbar />
       <main className="max-w-4xl mx-auto p-4">
-      {/* Firestore connection test
-        <button 
-          onClick={testFirestore}
-          className="bg-blue-500 text-white px-4 py-2 rounded mb-4"
-        >
-          Test Firestore Connection
-        </button>
-        */}
-        <h1 className="text-2xl font-bold mb-6">Latest Fries Posts</h1>
+        <UploadButton />
+        <h1 className="text-2xl font-bold mb-6 text-gray-800">Latest Fries Posts</h1>
         <div className="grid gap-6">
           {posts.map(post => (
-            <div key={post.id} className="border rounded-lg overflow-hidden">
+            <div key={post.id} className="border rounded-xl overflow-hidden bg-white/90 backdrop-blur-sm">
               <img 
                 src={post.imageUrl} 
                 alt={post.locationName}
@@ -65,7 +59,7 @@ export default function Home() {
               />
               <div className="p-4">
                 <div className="flex justify-between items-start mb-2">
-                  <h2 className="text-xl font-semibold">{post.locationName}</h2>
+                  <h2 className="text-xl font-semibold text-gray-800">{post.locationName}</h2>
                   <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-sm">
                     {post.type}
                   </span>

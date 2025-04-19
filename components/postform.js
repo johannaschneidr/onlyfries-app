@@ -6,6 +6,15 @@ import { useRouter } from 'next/router';
 import { useGoogleMaps } from '../hooks/useGoogleMaps';
 
 export default function PostForm() {
+  // Add ratingDescriptors at the top level
+  const ratingDescriptors = {
+    1: "Yikes",
+    2: "Meh",
+    3: "Solid",
+    4: "Crack",
+    5: "F***in Slaying"
+  };
+
   const [currentPage, setCurrentPage] = useState(1);
   const [image, setImage] = useState(null);
   const [preview, setPreview] = useState('');
@@ -31,6 +40,29 @@ export default function PostForm() {
   const inputElementRef = useRef(null);
   const router = useRouter();
   const { isLoaded: isGoogleMapsLoaded, error: googleMapsError } = useGoogleMaps();
+
+  // Check for temporary image in localStorage on component mount
+  useEffect(() => {
+    const tempImage = localStorage.getItem('tempImage');
+    if (tempImage) {
+      setPreview(tempImage);
+      // Convert data URL to File object
+      fetch(tempImage)
+        .then(res => res.blob())
+        .then(blob => {
+          const file = new File([blob], 'temp-image.jpg', { type: 'image/jpeg' });
+          setImage(file);
+        });
+      // Clear the temporary image from localStorage
+      localStorage.removeItem('tempImage');
+    }
+
+    // Check for page parameter in URL
+    const pageParam = router.query.page;
+    if (pageParam && pageParam === '2' && image) {
+      setCurrentPage(2);
+    }
+  }, [router.query.page, image]);
 
   // Fry Type Categories
   const fryTypes = {
@@ -119,7 +151,20 @@ export default function PostForm() {
     }
   };
 
-  // Initialize Google Places Autocomplete only when on page 2 and Google Maps is loaded
+  // Memoize the location input to prevent unnecessary re-renders
+  const LocationInput = useMemo(() => (
+    <div className="relative bg-white/60 backdrop-blur-sm rounded-md border border-white/50 h-[60px]">
+      <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
+        <svg className="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+      </div>
+      <div id="location-container" className="w-full h-full" />
+    </div>
+  ), []);
+
+  // Update the useEffect for Google Places Autocomplete
   useEffect(() => {
     if (currentPage !== 2 || !isGoogleMapsLoaded) {
       if (autocompleteRef.current) {
@@ -133,12 +178,12 @@ export default function PostForm() {
     if (!container) return;
 
     try {
-      // Only create input element if it doesn't exist
       if (!inputElementRef.current) {
         const input = document.createElement('input');
         input.type = 'text';
-        input.className = 'w-full p-4 text-base border rounded-lg';
+        input.className = 'w-full h-full p-4 pl-12 text-base bg-transparent outline-none';
         input.placeholder = 'Search for a location';
+        input.style.boxShadow = 'none';
         inputElementRef.current = input;
       }
 
@@ -147,13 +192,11 @@ export default function PostForm() {
         input.value = formData.locationName;
       }
 
-      // Clear the container and append the input only if it's not already there
       if (!container.contains(input)) {
         container.innerHTML = '';
         container.appendChild(input);
       }
 
-      // Initialize autocomplete only if it doesn't exist
       if (!autocompleteRef.current) {
         const autocomplete = new window.google.maps.places.Autocomplete(input, {
           componentRestrictions: { country: 'us' },
@@ -168,9 +211,53 @@ export default function PostForm() {
           strictBounds: false
         });
 
+        // Add custom styles to the dropdown
+        const style = document.createElement('style');
+        style.textContent = `
+          .pac-container {
+            margin-top: 6px !important;
+            background-color: rgba(255, 255, 255, 0.6) !important;
+            backdrop-filter: blur(8px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.5) !important;
+            border-radius: 6px !important;
+            box-shadow: none !important;
+            font-family: inherit !important;
+            padding: 0 !important;
+          }
+          .pac-item {
+            padding: 8px 16px !important;
+            line-height: 2 !important;
+            font-size: 16px !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3) !important;
+            cursor: pointer !important;
+            text-shadow: none !important;
+          }
+          .pac-item:last-child {
+            border-bottom: none !important;
+          }
+          .pac-item:hover {
+            background-color: rgba(255, 255, 255, 0.5) !important;
+          }
+          .pac-icon {
+            display: none !important;
+          }
+          .pac-item-query {
+            font-size: 16px !important;
+            padding-right: 4px !important;
+            text-shadow: none !important;
+          }
+          .pac-matched {
+            font-weight: 500 !important;
+            text-shadow: none !important;
+          }
+          .pac-item span {
+            text-shadow: none !important;
+          }
+        `;
+        document.head.appendChild(style);
+
         autocompleteRef.current = autocomplete;
 
-        // Handle place selection
         autocomplete.addListener('place_changed', () => {
           const place = autocomplete.getPlace();
           if (place) {
@@ -179,11 +266,10 @@ export default function PostForm() {
               : place.formatted_address || place.name || '';
             
             setFormData(prev => ({ ...prev, locationName }));
-            setError(''); // Clear any existing location error
+            setError('');
           }
         });
 
-        // Handle manual input changes
         input.addEventListener('input', (e) => {
           setFormData(prev => ({ ...prev, locationName: e.target.value }));
         });
@@ -191,12 +277,12 @@ export default function PostForm() {
 
     } catch (error) {
       console.error('Error initializing Google Places Autocomplete:', error);
-      // Fallback to regular input if autocomplete fails
       if (!inputElementRef.current) {
         const input = document.createElement('input');
         input.type = 'text';
-        input.className = 'w-full p-4 text-base border rounded-lg';
+        input.className = 'w-full h-full p-4 pl-12 text-base bg-transparent outline-none';
         input.placeholder = 'Enter location name';
+        input.style.boxShadow = 'none';
         input.value = formData.locationName;
         input.addEventListener('input', (e) => {
           setFormData(prev => ({ ...prev, locationName: e.target.value }));
@@ -212,8 +298,6 @@ export default function PostForm() {
         window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
         autocompleteRef.current = null;
       }
-      // Don't remove the input element on cleanup
-      // Just remove it from the container if we're leaving page 2
       if (currentPage !== 2) {
         const container = document.getElementById('location-container');
         if (container) {
@@ -228,16 +312,6 @@ export default function PostForm() {
     const value = e.target.value;
     setFormData(prev => ({ ...prev, locationName: value }));
   };
-
-  // Memoize the location input to prevent unnecessary re-renders
-  const LocationInput = useMemo(() => (
-    <div className="relative">
-      <div 
-        id="location-container" 
-        className="w-full"
-      />
-    </div>
-  ), []);
 
   // Update the form data state
   const updateFormData = (updates) => {
@@ -386,20 +460,9 @@ export default function PostForm() {
   };
 
   // Star Rating Component
-  const StarRating = ({ label, value, onChange }) => {
-    const ratingDescriptors = {
-      1: "Yikes",
-      2: "Meh",
-      3: "Solid",
-      4: "Crack",
-      5: "F***in Slaying"
-    };
-
+  const StarRating = ({ value, onChange }) => {
     return (
-      <div className="mb-4">
-        <label className="block text-base font-medium mb-2">
-          {label}
-        </label>
+      <div className="p-4 bg-white/80 backdrop-blur-sm rounded-xl">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1">
             {[1, 2, 3, 4, 5].map((star) => (
@@ -419,15 +482,14 @@ export default function PostForm() {
               </button>
             ))}
           </div>
-          {value > 0 && (
+          {value > 0 ? (
             <span className="text-lg font-medium text-gray-700">
               {ratingDescriptors[value]}
             </span>
+          ) : (
+            <span className="text-lg text-gray-500">Rating</span>
           )}
         </div>
-        {formSubmitted && value === 0 && (
-          <p className="text-sm text-red-500 mt-1">Please select a rating</p>
-        )}
       </div>
     );
   };
@@ -472,31 +534,35 @@ export default function PostForm() {
       }
     };
 
+    const handleClick = (num) => {
+      if (value === num) {
+        onChange(0); // Deselect if clicking the same value
+      } else {
+        onChange(num); // Select new value
+      }
+    };
+
     return (
-      <div className="mb-4">
-        <label className="block text-base font-medium mb-2">
-          {label}
-        </label>
-        <div className="flex items-center gap-4">
-          <div className="flex gap-1">
+      <div className="bg-white/60 backdrop-blur-sm rounded-md border border-white/50 h-[60px]">
+        <div className="flex items-center h-full gap-2 px-4">
+          <span className="text-base text-gray-500 w-24">{label}</span>
+          <div className="flex gap-1.5 flex-1">
             {[1, 2, 3, 4, 5].map((num) => (
               <button
                 key={num}
                 type="button"
-                onClick={() => onChange(num)}
-                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors
+                onClick={() => handleClick(num)}
+                className={`w-full h-8 rounded-lg flex items-center justify-center text-sm font-medium transition-colors
                   ${value === num 
                     ? 'bg-yellow-500 text-white' 
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    : 'bg-white text-gray-700'
                   }`}
               />
             ))}
           </div>
-          {value > 0 && (
-            <span className="text-lg font-medium text-gray-700">
-              {ratingDescriptors[label.toLowerCase()][value]}
-            </span>
-          )}
+          <span className="text-base font-medium text-gray-700 w-24 text-right">
+            {value > 0 ? ratingDescriptors[label.toLowerCase()][value] : ''}
+          </span>
         </div>
       </div>
     );
@@ -505,7 +571,7 @@ export default function PostForm() {
   return (
     <form onSubmit={handleSubmit} className="max-w-2xl mx-auto p-4 sm:p-6" noValidate>
       {error && (
-        <div className="mb-8 p-4 bg-red-100 text-red-700 rounded">
+        <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-md border border-white/50">
           {error}
         </div>
       )}
@@ -526,7 +592,7 @@ export default function PostForm() {
                 {!preview ? (
                   <div 
                     onClick={() => imageInputRef.current?.click()}
-                    className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-yellow-500 transition-colors"
+                    className="border-2 border-dashed border-gray-300 rounded-md p-8 text-center cursor-pointer hover:border-yellow-500 transition-colors bg-white/60 backdrop-blur-sm"
                   >
                     <div className="flex flex-col items-center justify-center">
                       <svg className="w-20 h-20 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -542,7 +608,7 @@ export default function PostForm() {
                     <img 
                       src={preview} 
                       alt="Preview" 
-                      className="w-full h-64 object-cover rounded-lg"
+                      className="w-full h-64 object-cover rounded-md"
                     />
                     <button
                       type="button"
@@ -560,7 +626,7 @@ export default function PostForm() {
             <button
               onClick={handleNext}
               disabled={!preview}
-              className="mt-8 w-full max-w-md bg-yellow-500 text-white py-4 px-6 rounded-lg text-lg font-medium hover:bg-yellow-600 disabled:opacity-50"
+              className="mt-8 w-full max-w-md bg-yellow-500 text-white py-4 px-6 rounded-md text-lg font-semibold disabled:opacity-50"
             >
               Rate
             </button>
@@ -568,84 +634,106 @@ export default function PostForm() {
         )}
 
         {currentPage === 2 && (
-          <div className="space-y-8">
-            <div>
-              <StarRating
-                label="Rating"
-                value={formData.overall}
-                onChange={(value) => updateFormData({ overall: value })}
-              />
+          <div className="space-y-1.5">
+            <div className="relative bg-white/60 backdrop-blur-sm rounded-md border border-white/50 h-[60px]">
+              <div className="absolute inset-0 flex items-center justify-between px-4">
+                <div className="flex items-center gap-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => updateFormData({ overall: star })}
+                      className="focus:outline-none"
+                    >
+                      <svg
+                        className={`w-10 h-10 ${star <= formData.overall ? 'text-yellow-500' : 'text-gray-300'}`}
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                    </button>
+                  ))}
+                </div>
+                {formData.overall > 0 && (
+                  <span className="text-base font-medium text-gray-700">
+                    {ratingDescriptors[formData.overall]}
+                  </span>
+                )}
+              </div>
             </div>
+
+            {LocationInput}
 
             <div className="relative">
-              <label className="block text-base font-medium mb-3">
-                Location Name
-              </label>
-              <div 
-                id="location-container" 
-                className="w-full"
-              />
-            </div>
-
-            <div>
-              <label className="block text-base font-medium mb-3">
-                Type
-              </label>
-              <div className="flex flex-wrap gap-2 p-3 border rounded-lg min-h-[52px]">
-                {formData.types.map(type => {
-                  const typeInfo = allFryTypes.find(t => t.value === type);
-                  return (
-                    <span
-                      key={type}
-                      className="flex items-center gap-1 px-3 py-2 bg-yellow-100 text-yellow-800 rounded-full text-base"
-                    >
-                      {typeInfo?.label}
-                      <button
-                        type="button"
-                        onClick={() => removeTag(type)}
-                        className="ml-1 text-yellow-600 hover:text-yellow-800 text-lg"
-                      >
-                        ×
-                      </button>
-                    </span>
-                  );
-                })}
-                <div className="relative flex-1">
-                  <input
-                    key="tag-input"
-                    ref={tagInputRef}
-                    type="text"
-                    value={tagInput}
-                    onChange={handleTagInputChange}
-                    onKeyDown={handleKeyDown}
-                    onFocus={() => setShowSuggestions(true)}
-                    className="w-full outline-none text-base"
-                    placeholder={formData.types.length === 0 ? "Type to select tags" : ""}
-                  />
-                  {showSuggestions && suggestions.length > 0 && (
-                    <div className="absolute z-10 w-full mt-1 bg-white border rounded-lg shadow-lg">
-                      {suggestions.map((type) => (
-                        <div
-                          key={type.value}
-                          onClick={() => addTag(type)}
-                          className="px-4 py-3 hover:bg-gray-100 cursor-pointer text-base"
+              <div className="relative bg-white/60 backdrop-blur-sm rounded-md border border-white/50 h-[60px]">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none z-10">
+                  <svg className="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                  </svg>
+                </div>
+                <div className="p-4 pl-12 h-full">
+                  <div className="flex flex-wrap gap-2 items-center h-full">
+                    {formData.types.map(type => {
+                      const typeInfo = allFryTypes.find(t => t.value === type);
+                      return (
+                        <span
+                          key={type}
+                          className="inline-flex items-center px-3 py-1 text-sm bg-white/60 backdrop-blur-sm text-gray-700 rounded-full border border-gray-400"
                         >
-                          {type.label}
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                          {typeInfo?.label}
+                          <button
+                            type="button"
+                            onClick={() => removeTag(type)}
+                            className="ml-1 text-gray-500 hover:text-gray-700"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      );
+                    })}
+                    <input
+                      key="tag-input"
+                      ref={tagInputRef}
+                      type="text"
+                      value={tagInput}
+                      onChange={handleTagInputChange}
+                      onKeyDown={handleKeyDown}
+                      onFocus={() => setShowSuggestions(true)}
+                      className="flex-1 min-w-[150px] outline-none text-base bg-transparent"
+                      placeholder={formData.types.length === 0 ? "Type of fries" : ""}
+                    />
+                  </div>
                 </div>
               </div>
-              <div className="mt-2">
-                <div className="flex flex-wrap gap-2 mt-1">
-                  {allFryTypes.slice(0, 5).map((type) => (
+              {showSuggestions && suggestions.length > 0 && (
+                <div className="absolute z-20 w-full mt-1.5 bg-white/60 backdrop-blur-sm border border-white/50 rounded-md">
+                  {suggestions.map((type) => (
+                    <div
+                      key={type.value}
+                      onClick={() => addTag(type)}
+                      className="flex items-center px-4 py-2 hover:bg-white/50 cursor-pointer text-base border-b border-white/30 last:border-b-0"
+                    >
+                      <svg className="w-4 h-4 text-gray-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                      {type.label}
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="mt-1.5">
+                <div className="flex flex-wrap gap-1.5">
+                  {allFryTypes.slice(0, 4).map((type) => (
                     <button
                       key={type.value}
                       type="button"
                       onClick={() => addTag(type)}
-                      className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200"
+                      className="inline-flex items-center px-3 py-1 text-sm bg-white/60 backdrop-blur-sm text-gray-700 rounded-full border border-gray-400"
                     >
+                      <svg className="w-3 h-3 text-gray-600 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
                       {type.label}
                     </button>
                   ))}
@@ -653,34 +741,40 @@ export default function PostForm() {
               </div>
             </div>
 
-            <div>
-              <label className="block text-base font-medium mb-3">Name on Menu (Optional)</label>
+            <div className="relative bg-white/60 backdrop-blur-sm rounded-md border border-white/50 h-[60px]">
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                <svg className="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+              </div>
               <input
                 key="menu-name-input"
                 type="text"
                 value={formData.menuName}
                 onChange={handleMenuNameChange}
-                className="w-full p-4 text-base border rounded-lg"
-                placeholder="Crazy loaded truffle fries"
+                className="w-full h-full p-4 pl-12 text-base bg-transparent outline-none"
+                placeholder="Name on Menu (Optional)"
               />
             </div>
 
-            <div className="flex gap-4 mt-8">
+            <div className="flex gap-4 mt-4">
               <button
                 type="button"
                 onClick={handleNext}
-                className="flex-1 bg-yellow-500 text-white py-4 px-6 rounded-lg text-lg font-medium hover:bg-yellow-600"
+                className="w-full bg-yellow-500 text-white py-4 px-6 rounded-md text-lg font-semibold"
               >
-                Submit
+                Next
               </button>
             </div>
           </div>
         )}
 
         {currentPage === 3 && (
-          <div className="space-y-8">
-            <h2 className="text-base font-medium mb-6">Want to give some extra details?</h2>
-            <div className="space-y-8">
+          <div className="space-y-6">
+            <h2 className="text-xl font-medium text-gray-800 mb-4">
+              Want to provide some additional details?
+            </h2>
+            <div className="space-y-1.5">
               <RatingScale
                 label="Length"
                 value={formData.length}
@@ -712,14 +806,13 @@ export default function PostForm() {
               />
             </div>
 
-            <div>
-              <label className="block text-base font-medium mb-3">Comment (Optional)</label>
+            <div className="relative bg-white/60 backdrop-blur-sm rounded-md border border-white/50">
               <textarea
                 value={formData.description}
                 onChange={handleDescriptionChange}
-                className="w-full p-4 text-base border rounded-lg"
+                className="w-full p-4 text-base bg-transparent outline-none"
                 rows="4"
-                placeholder="Describe the fries, any special seasonings, etc."
+                placeholder="Tell us more!"
               />
             </div>
 
@@ -728,9 +821,14 @@ export default function PostForm() {
                 type="button"
                 onClick={handleSubmit}
                 disabled={loading}
-                className="flex-1 bg-yellow-500 text-white py-4 px-6 rounded-lg text-lg font-medium hover:bg-yellow-600 disabled:opacity-50"
+                className="w-full bg-yellow-500 text-white py-4 px-6 rounded-md text-lg font-semibold"
               >
-                {loading ? 'Submitting...' : 'Submit'}
+                {loading ? 'Submitting...' : (
+                  formData.length || formData.thickness || formData.crispiness || 
+                  formData.saltiness || formData.darkness || formData.description
+                    ? 'Submit'
+                    : 'Submit without details'
+                )}
               </button>
             </div>
           </div>
