@@ -28,6 +28,7 @@ export default function PostForm() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const locationInputRef = useRef(null);
   const autocompleteRef = useRef(null);
+  const inputElementRef = useRef(null);
   const router = useRouter();
   const { isLoaded: isGoogleMapsLoaded, error: googleMapsError } = useGoogleMaps();
 
@@ -121,7 +122,6 @@ export default function PostForm() {
   // Initialize Google Places Autocomplete only when on page 2 and Google Maps is loaded
   useEffect(() => {
     if (currentPage !== 2 || !isGoogleMapsLoaded) {
-      // Clean up if we're not on page 2 or Google Maps isn't loaded
       if (autocompleteRef.current) {
         window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
         autocompleteRef.current = null;
@@ -129,73 +129,96 @@ export default function PostForm() {
       return;
     }
 
-    // Only initialize if we haven't already
-    if (autocompleteRef.current) {
-      return;
-    }
-
-    console.log('Initializing Google Places Autocomplete for page 2...');
-    
     const container = document.getElementById('location-container');
-    if (container) {
-      try {
-        console.log('Creating PlaceAutocompleteElement...');
-        const autocomplete = new window.google.maps.places.PlaceAutocompleteElement({
-          inputElement: document.createElement('input'),
+    if (!container) return;
+
+    try {
+      // Only create input element if it doesn't exist
+      if (!inputElementRef.current) {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'w-full p-4 text-base border rounded-lg';
+        input.placeholder = 'Search for a location';
+        inputElementRef.current = input;
+      }
+
+      const input = inputElementRef.current;
+      if (formData.locationName) {
+        input.value = formData.locationName;
+      }
+
+      // Clear the container and append the input only if it's not already there
+      if (!container.contains(input)) {
+        container.innerHTML = '';
+        container.appendChild(input);
+      }
+
+      // Initialize autocomplete only if it doesn't exist
+      if (!autocompleteRef.current) {
+        const autocomplete = new window.google.maps.places.Autocomplete(input, {
           componentRestrictions: { country: 'us' },
-          locationBias: {
+          fields: ['name', 'formatted_address'],
+          types: ['establishment'],
+          bounds: {
             north: 40.9176,
             south: 40.4774,
             east: -73.7004,
             west: -74.2591
           },
-          types: ['establishment']
+          strictBounds: false
         });
 
-        // Style the autocomplete element
-        autocomplete.style.display = 'block';
-        autocomplete.style.width = '100%';
-
-        // Style the input inside the autocomplete element
-        const input = autocomplete.querySelector('input');
-        if (input) {
-          input.className = 'w-full p-4 text-base border rounded-lg';
-          input.placeholder = 'Type to search';
-        }
-
-        // Clear the container and append the new element
-        container.innerHTML = '';
-        container.appendChild(autocomplete);
-
-        console.log('PlaceAutocompleteElement instance created:', autocomplete);
         autocompleteRef.current = autocomplete;
 
         // Handle place selection
-        autocomplete.addEventListener('place_changed', () => {
-          console.log('Place changed event triggered');
+        autocomplete.addListener('place_changed', () => {
           const place = autocomplete.getPlace();
-          console.log('Selected place:', place);
-          if (place.name) {
-            setFormData(prev => ({ ...prev, locationName: place.name }));
+          if (place) {
+            const locationName = place.name && place.formatted_address 
+              ? `${place.name}, ${place.formatted_address}`
+              : place.formatted_address || place.name || '';
+            
+            setFormData(prev => ({ ...prev, locationName }));
+            setError(''); // Clear any existing location error
           }
         });
 
-        console.log('Added place_changed event listener');
-      } catch (error) {
-        console.error('Error initializing Google Places Autocomplete:', error);
+        // Handle manual input changes
+        input.addEventListener('input', (e) => {
+          setFormData(prev => ({ ...prev, locationName: e.target.value }));
+        });
       }
+
+    } catch (error) {
+      console.error('Error initializing Google Places Autocomplete:', error);
+      // Fallback to regular input if autocomplete fails
+      if (!inputElementRef.current) {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'w-full p-4 text-base border rounded-lg';
+        input.placeholder = 'Enter location name';
+        input.value = formData.locationName;
+        input.addEventListener('input', (e) => {
+          setFormData(prev => ({ ...prev, locationName: e.target.value }));
+        });
+        inputElementRef.current = input;
+      }
+      container.innerHTML = '';
+      container.appendChild(inputElementRef.current);
     }
 
-    // Cleanup function
     return () => {
-      console.log('Cleaning up autocomplete for page 2');
       if (autocompleteRef.current) {
         window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
         autocompleteRef.current = null;
       }
-      const container = document.getElementById('location-container');
-      if (container) {
-        container.innerHTML = '';
+      // Don't remove the input element on cleanup
+      // Just remove it from the container if we're leaving page 2
+      if (currentPage !== 2) {
+        const container = document.getElementById('location-container');
+        if (container) {
+          container.innerHTML = '';
+        }
       }
     };
   }, [currentPage, isGoogleMapsLoaded]);
@@ -292,9 +315,25 @@ export default function PostForm() {
   };
 
   const handleNext = () => {
-    if (currentPage === 1 && !image) {
-      setError('Please upload an image first');
-      return;
+    if (currentPage === 1) {
+      if (!image) {
+        setError('Please upload an image first');
+        return;
+      }
+    } else if (currentPage === 2) {
+      const missingFields = [];
+      if (!formData.overall) missingFields.push('rating');
+      if (!formData.locationName) missingFields.push('location name');
+      if (formData.types.length === 0) missingFields.push('type of fries');
+
+      if (missingFields.length > 0) {
+        if (missingFields.length === 1) {
+          setError(`Please add a ${missingFields[0]}`);
+        } else {
+          setError('Please provide all required information');
+        }
+        return;
+      }
     }
     setError('');
     setCurrentPage(currentPage + 1);
@@ -309,13 +348,18 @@ export default function PostForm() {
     e.preventDefault();
     setFormSubmitted(true);
 
-    if (!image) {
-      setError('Please upload an image');
-      return;
-    }
+    const missingFields = [];
+    if (!image) missingFields.push('image');
+    if (!formData.overall) missingFields.push('rating');
+    if (!formData.locationName) missingFields.push('location name');
+    if (formData.types.length === 0) missingFields.push('type of fries');
 
-    if (!formData.locationName || formData.types.length === 0 || formData.overall === 0) {
-      setError('Please fill in all required fields');
+    if (missingFields.length > 0) {
+      if (missingFields.length === 1) {
+        setError(`Please add a ${missingFields[0]}`);
+      } else {
+        setError('Please provide all required information');
+      }
       return;
     }
 
@@ -454,9 +498,6 @@ export default function PostForm() {
             </span>
           )}
         </div>
-        {formSubmitted && value === 0 && (
-          <p className="text-sm text-red-500 mt-1">Please select a rating</p>
-        )}
       </div>
     );
   };
