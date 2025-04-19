@@ -7,7 +7,6 @@ export default function Navbar() {
       <Link href="/" className="text-xl font-bold">OnlyFries</Link>
       <div className="flex gap-4">
         <Link href="/" className="hover:text-yellow-500">Home</Link>
-        <Link href="/new" className="hover:text-yellow-500">New Post</Link>
       </div>
     </nav>
   );
