@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import Navbar from '../components/navbar';
 import UploadButton from '../components/uploadbutton';
+import PostCard from '../components/PostCard';
 import { db } from '../lib/firebase';
-import { collection, addDoc, query, orderBy, onSnapshot, getDocs } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, getDocs } from 'firebase/firestore';
 
 export default function Home() {
   const [posts, setPosts] = useState([]);
@@ -51,45 +52,7 @@ export default function Home() {
         <h1 className="text-2xl font-bold mb-6 text-gray-800">Latest Fries Posts</h1>
         <div className="grid gap-6">
           {posts.map(post => (
-            <div key={post.id} className="border rounded-xl overflow-hidden bg-white/90 backdrop-blur-sm">
-              <img 
-                src={post.imageUrl} 
-                alt={post.locationName}
-                className="w-full h-64 object-cover"
-              />
-              <div className="p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <h2 className="text-xl font-semibold text-gray-800">{post.locationName}</h2>
-                  <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-sm">
-                    {post.type}
-                  </span>
-                </div>
-                <p className="text-gray-600 mb-4">{post.description}</p>
-                <div className="text-sm text-gray-500 mb-4">
-                  Posted on {new Date(post.createdAt).toLocaleDateString()} at {new Date(post.createdAt).toLocaleTimeString()}
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                  <div>
-                    <span className="font-medium">Length:</span> {post.length}/10
-                  </div>
-                  <div>
-                    <span className="font-medium">Thickness:</span> {post.thickness}/10
-                  </div>
-                  <div>
-                    <span className="font-medium">Crispiness:</span> {post.crispiness}/10
-                  </div>
-                  <div>
-                    <span className="font-medium">Saltiness:</span> {post.saltiness}/10
-                  </div>
-                  <div>
-                    <span className="font-medium">Darkness:</span> {post.darkness}/10
-                  </div>
-                  <div>
-                    <span className="font-medium">Overall:</span> {post.overall}/10
-                  </div>
-                </div>
-              </div>
-            </div>
+            <PostCard key={post.id} post={post} />
           ))}
         </div>
       </main>
