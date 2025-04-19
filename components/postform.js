@@ -1,10 +1,12 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { storage, db } from '../lib/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { collection, addDoc } from 'firebase/firestore';
 import { useRouter } from 'next/router';
+import { useGoogleMaps } from '../hooks/useGoogleMaps';
 
 export default function PostForm() {
+  const [currentPage, setCurrentPage] = useState(1);
   const [image, setImage] = useState(null);
   const [preview, setPreview] = useState('');
   const [loading, setLoading] = useState(false);
@@ -25,7 +27,9 @@ export default function PostForm() {
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const locationInputRef = useRef(null);
+  const autocompleteRef = useRef(null);
   const router = useRouter();
+  const { isLoaded: isGoogleMapsLoaded, error: googleMapsError } = useGoogleMaps();
 
   // Fry Type Categories
   const fryTypes = {
@@ -114,37 +118,123 @@ export default function PostForm() {
     }
   };
 
-  // Initialize Google Places Autocomplete
-  // This effect runs once when the component mounts
-  // It creates an autocomplete instance attached to the location input
-  // The autocomplete is restricted to establishments in New York City area
+  // Initialize Google Places Autocomplete only when on page 2 and Google Maps is loaded
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.google) {
-      // Define bounds for New York City area
-      const nycBounds = new window.google.maps.LatLngBounds(
-        new window.google.maps.LatLng(40.4774, -74.2591), // Southwest corner (including outer boroughs)
-        new window.google.maps.LatLng(40.9176, -73.7004)  // Northeast corner
-      );
-
-      const autocomplete = new window.google.maps.places.Autocomplete(
-        locationInputRef.current,
-        {
-          types: ['establishment'],
-          bounds: nycBounds,
-          strictBounds: true // This ensures results are strictly within the bounds
-        }
-      );
-
-      // Handle place selection from autocomplete
-      autocomplete.addListener('place_changed', () => {
-        const place = autocomplete.getPlace();
-        if (place.name) {
-          setFormData(prev => ({ ...prev, locationName: place.name }));
-          setShowSuggestions(false);
-        }
-      });
+    if (currentPage !== 2 || !isGoogleMapsLoaded) {
+      // Clean up if we're not on page 2 or Google Maps isn't loaded
+      if (autocompleteRef.current) {
+        window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
+        autocompleteRef.current = null;
+      }
+      return;
     }
-  }, []);
+
+    // Only initialize if we haven't already
+    if (autocompleteRef.current) {
+      return;
+    }
+
+    console.log('Initializing Google Places Autocomplete for page 2...');
+    
+    const container = document.getElementById('location-container');
+    if (container) {
+      try {
+        console.log('Creating PlaceAutocompleteElement...');
+        const autocomplete = new window.google.maps.places.PlaceAutocompleteElement({
+          inputElement: document.createElement('input'),
+          componentRestrictions: { country: 'us' },
+          locationBias: {
+            north: 40.9176,
+            south: 40.4774,
+            east: -73.7004,
+            west: -74.2591
+          },
+          types: ['establishment']
+        });
+
+        // Style the autocomplete element
+        autocomplete.style.display = 'block';
+        autocomplete.style.width = '100%';
+
+        // Style the input inside the autocomplete element
+        const input = autocomplete.querySelector('input');
+        if (input) {
+          input.className = 'w-full p-4 text-base border rounded-lg';
+          input.placeholder = 'Type to search';
+        }
+
+        // Clear the container and append the new element
+        container.innerHTML = '';
+        container.appendChild(autocomplete);
+
+        console.log('PlaceAutocompleteElement instance created:', autocomplete);
+        autocompleteRef.current = autocomplete;
+
+        // Handle place selection
+        autocomplete.addEventListener('place_changed', () => {
+          console.log('Place changed event triggered');
+          const place = autocomplete.getPlace();
+          console.log('Selected place:', place);
+          if (place.name) {
+            setFormData(prev => ({ ...prev, locationName: place.name }));
+          }
+        });
+
+        console.log('Added place_changed event listener');
+      } catch (error) {
+        console.error('Error initializing Google Places Autocomplete:', error);
+      }
+    }
+
+    // Cleanup function
+    return () => {
+      console.log('Cleaning up autocomplete for page 2');
+      if (autocompleteRef.current) {
+        window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
+        autocompleteRef.current = null;
+      }
+      const container = document.getElementById('location-container');
+      if (container) {
+        container.innerHTML = '';
+      }
+    };
+  }, [currentPage, isGoogleMapsLoaded]);
+
+  // Handle location input changes
+  const handleLocationChange = (e) => {
+    const value = e.target.value;
+    setFormData(prev => ({ ...prev, locationName: value }));
+  };
+
+  // Memoize the location input to prevent unnecessary re-renders
+  const LocationInput = useMemo(() => (
+    <div className="relative">
+      <div 
+        id="location-container" 
+        className="w-full"
+      />
+    </div>
+  ), []);
+
+  // Update the form data state
+  const updateFormData = (updates) => {
+    setFormData(prev => {
+      const newData = { ...prev, ...updates };
+      return newData;
+    });
+  };
+
+  // Handle menu name changes
+  const handleMenuNameChange = (e) => {
+    const value = e.target.value;
+    updateFormData({ menuName: value });
+  };
+
+  // Handle description changes
+  const handleDescriptionChange = (e) => {
+    const value = e.target.value;
+    updateFormData({ description: value });
+  };
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -201,12 +291,31 @@ export default function PostForm() {
     }
   };
 
+  const handleNext = () => {
+    if (currentPage === 1 && !image) {
+      setError('Please upload an image first');
+      return;
+    }
+    setError('');
+    setCurrentPage(currentPage + 1);
+  };
+
+  const handleBack = () => {
+    setError('');
+    setCurrentPage(currentPage - 1);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setFormSubmitted(true);
 
     if (!image) {
-      setError('Please select an image');
+      setError('Please upload an image');
+      return;
+    }
+
+    if (!formData.locationName || formData.types.length === 0 || formData.overall === 0) {
+      setError('Please fill in all required fields');
       return;
     }
 
@@ -214,61 +323,19 @@ export default function PostForm() {
     setError('');
 
     try {
-      // 1. Upload image
-      console.log('Starting upload process...');
       const imageUrl = await uploadImage(image);
-
-      // 2. Prepare post data
       const postData = {
-        locationName: formData.locationName.trim(),
-        menuName: formData.menuName.trim(),
-        types: formData.types.map(type => fryTypes['Classic Styles'].find(t => t.value === type) || fryTypes['Specialty Cuts'].find(t => t.value === type) || fryTypes['Alternative Fries'].find(t => t.value === type) || fryTypes['Flavor Profiles'].find(t => t.value === type)).map(t => t.value),
-        description: formData.description.trim(),
-        length: Number(formData.length),
-        thickness: Number(formData.thickness),
-        crispiness: Number(formData.crispiness),
-        saltiness: Number(formData.saltiness),
-        darkness: Number(formData.darkness),
-        overall: Number(formData.overall),
+        ...formData,
         imageUrl,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        createdAt: new Date().toISOString()
       };
 
-      // 3. Validate data
-      if (!postData.locationName || 
-          postData.types.length === 0 || 
-          postData.length === 0 || 
-          postData.thickness === 0 || 
-          postData.crispiness === 0 || 
-          postData.saltiness === 0 || 
-          postData.darkness === 0 || 
-          postData.overall === 0) {
-        throw new Error('Please fill in all required fields');
-      }
-
-      // 4. Save to Firestore
-      console.log('Saving to Firestore:', postData);
-      try {
-        // Save to Firestore using addDoc
-        const postsRef = collection(db, 'posts');
-        const docRef = await addDoc(postsRef, postData);
-        console.log('Document written with ID:', docRef.id);
-        
-        // Navigate home on success
-        router.push('/');
-      } catch (error) {
-        console.error('Firestore write error:', {
-          code: error.code,
-          message: error.message,
-          details: error
-        });
-        setError('Error saving post: ' + (error.message || 'Unknown error'));
-        throw error;
-      }
+      const postsRef = collection(db, 'posts');
+      await addDoc(postsRef, postData);
+      router.push('/');
     } catch (error) {
-      console.error('Submission error:', error);
-      setError(error.message || 'Error submitting post');
+      console.error('Error submitting post:', error);
+      setError('Error submitting post. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -286,8 +353,8 @@ export default function PostForm() {
 
     return (
       <div className="mb-4">
-        <label className="block text-sm font-medium mb-2">
-          {label} <span className="text-red-500">*</span>
+        <label className="block text-base font-medium mb-2">
+          {label}
         </label>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1">
@@ -363,8 +430,8 @@ export default function PostForm() {
 
     return (
       <div className="mb-4">
-        <label className="block text-sm font-medium mb-2">
-          {label} <span className="text-red-500">*</span>
+        <label className="block text-base font-medium mb-2">
+          {label}
         </label>
         <div className="flex items-center gap-4">
           <div className="flex gap-1">
@@ -395,210 +462,239 @@ export default function PostForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-2xl mx-auto p-4 sm:p-6">
+    <form onSubmit={handleSubmit} className="max-w-2xl mx-auto p-4 sm:p-6" noValidate>
       {error && (
         <div className="mb-8 p-4 bg-red-100 text-red-700 rounded">
           {error}
         </div>
       )}
 
-      <div className="mb-8">
-        <label className="block text-base font-medium mb-3">
-          Fries Image <span className="text-red-500">*</span>
-        </label>
-        <div className="relative">
-          <input
-            ref={imageInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleImageChange}
-            className="hidden"
-            required
-          />
-          {!preview ? (
-            <div 
-              onClick={() => imageInputRef.current?.click()}
-              className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-yellow-500 transition-colors"
-            >
-              <div className="flex flex-col items-center justify-center">
-                <svg className="w-16 h-16 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                <p className="text-base text-gray-600">Tap to take a photo or choose from library</p>
-                <p className="text-sm text-gray-500 mt-2">PNG, JPG up to 5MB</p>
-              </div>
-            </div>
-          ) : (
-            <div className="relative">
-              <img 
-                src={preview} 
-                alt="Preview" 
-                className="w-full h-64 object-cover rounded-lg"
-              />
-              <button
-                type="button"
-                onClick={removeImage}
-                className="absolute top-3 right-3 bg-white/80 hover:bg-white text-gray-800 rounded-full p-3 shadow-lg"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-              <button
-                type="button"
-                onClick={() => imageInputRef.current?.click()}
-                className="absolute bottom-3 right-3 bg-white/80 hover:bg-white text-gray-800 rounded-full p-3 shadow-lg"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div className="mb-8">
-        <StarRating
-          label="Rating"
-          value={formData.overall}
-          onChange={(value) => setFormData({ ...formData, overall: value })}
-        />
-      </div>
-
-      <div className="mb-8 relative">
-        <label className="block text-base font-medium mb-3">
-          Location Name <span className="text-red-500">*</span>
-        </label>
-        <input
-          ref={locationInputRef}
-          type="text"
-          value={formData.locationName}
-          onChange={(e) => {
-            setFormData({ ...formData, locationName: e.target.value });
-            setShowSuggestions(true);
-          }}
-          className="w-full p-4 text-base border rounded-lg"
-          placeholder="Type to search"
-          required
-        />
-      </div>
-
-      <div className="mb-8">
-        <label className="block text-base font-medium mb-3">Name on Menu (Optional)</label>
-        <input
-          type="text"
-          value={formData.menuName}
-          onChange={(e) => setFormData({ ...formData, menuName: e.target.value })}
-          className="w-full p-4 text-base border rounded-lg"
-          placeholder="Crazy loaded truffle fries"
-        />
-        <p className="text-sm text-gray-500 mt-2">If establishment has multiple types of fries on their menu</p>
-      </div>
-
-      <div className="mb-8">
-        <label className="block text-base font-medium mb-3">
-          Type <span className="text-red-500">*</span>
-        </label>
-        <div className="flex flex-wrap gap-2 p-3 border rounded-lg min-h-[52px]">
-          {formData.types.map(type => {
-            const typeInfo = allFryTypes.find(t => t.value === type);
-            return (
-              <span
-                key={type}
-                className="flex items-center gap-1 px-3 py-2 bg-yellow-100 text-yellow-800 rounded-full text-base"
-              >
-                {typeInfo?.label}
-                <button
-                  type="button"
-                  onClick={() => removeTag(type)}
-                  className="ml-1 text-yellow-600 hover:text-yellow-800 text-lg"
-                >
-                  ×
-                </button>
-              </span>
-            );
-          })}
-          <div className="relative flex-1">
-            <input
-              ref={tagInputRef}
-              type="text"
-              value={tagInput}
-              onChange={handleTagInputChange}
-              onKeyDown={handleKeyDown}
-              onFocus={() => setShowSuggestions(true)}
-              className="w-full outline-none text-base"
-              placeholder={formData.types.length === 0 ? "Type to select tags" : ""}
-            />
-            {showSuggestions && suggestions.length > 0 && (
-              <div className="absolute z-10 w-full mt-1 bg-white border rounded-lg shadow-lg">
-                {suggestions.map((type) => (
-                  <div
-                    key={type.value}
-                    onClick={() => addTag(type)}
-                    className="px-4 py-3 hover:bg-gray-100 cursor-pointer text-base"
+      <div className="relative">
+        {currentPage === 1 && (
+          <div className="flex flex-col items-center justify-center min-h-[60vh]">
+            <div className="w-full max-w-md">
+              <div className="relative">
+                <input
+                  ref={imageInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="hidden"
+                  required
+                />
+                {!preview ? (
+                  <div 
+                    onClick={() => imageInputRef.current?.click()}
+                    className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-yellow-500 transition-colors"
                   >
-                    {type.label}
+                    <div className="flex flex-col items-center justify-center">
+                      <svg className="w-20 h-20 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      <p className="text-lg text-gray-600">Tap to take a photo or choose from library</p>
+                      <p className="text-sm text-gray-500 mt-2">PNG, JPG up to 5MB</p>
+                    </div>
                   </div>
-                ))}
+                ) : (
+                  <div className="relative">
+                    <img 
+                      src={preview} 
+                      alt="Preview" 
+                      className="w-full h-64 object-cover rounded-lg"
+                    />
+                    <button
+                      type="button"
+                      onClick={removeImage}
+                      className="absolute top-3 right-3 bg-white/80 hover:bg-white text-gray-800 rounded-full p-3 shadow-lg"
+                    >
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                )}
               </div>
-            )}
+            </div>
+            <button
+              onClick={handleNext}
+              disabled={!preview}
+              className="mt-8 w-full max-w-md bg-yellow-500 text-white py-4 px-6 rounded-lg text-lg font-medium hover:bg-yellow-600 disabled:opacity-50"
+            >
+              Rate
+            </button>
           </div>
-        </div>
+        )}
+
+        {currentPage === 2 && (
+          <div className="space-y-8">
+            <div>
+              <StarRating
+                label="Rating"
+                value={formData.overall}
+                onChange={(value) => updateFormData({ overall: value })}
+              />
+            </div>
+
+            <div className="relative">
+              <label className="block text-base font-medium mb-3">
+                Location Name
+              </label>
+              <div 
+                id="location-container" 
+                className="w-full"
+              />
+            </div>
+
+            <div>
+              <label className="block text-base font-medium mb-3">
+                Type
+              </label>
+              <div className="flex flex-wrap gap-2 p-3 border rounded-lg min-h-[52px]">
+                {formData.types.map(type => {
+                  const typeInfo = allFryTypes.find(t => t.value === type);
+                  return (
+                    <span
+                      key={type}
+                      className="flex items-center gap-1 px-3 py-2 bg-yellow-100 text-yellow-800 rounded-full text-base"
+                    >
+                      {typeInfo?.label}
+                      <button
+                        type="button"
+                        onClick={() => removeTag(type)}
+                        className="ml-1 text-yellow-600 hover:text-yellow-800 text-lg"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  );
+                })}
+                <div className="relative flex-1">
+                  <input
+                    key="tag-input"
+                    ref={tagInputRef}
+                    type="text"
+                    value={tagInput}
+                    onChange={handleTagInputChange}
+                    onKeyDown={handleKeyDown}
+                    onFocus={() => setShowSuggestions(true)}
+                    className="w-full outline-none text-base"
+                    placeholder={formData.types.length === 0 ? "Type to select tags" : ""}
+                  />
+                  {showSuggestions && suggestions.length > 0 && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border rounded-lg shadow-lg">
+                      {suggestions.map((type) => (
+                        <div
+                          key={type.value}
+                          onClick={() => addTag(type)}
+                          className="px-4 py-3 hover:bg-gray-100 cursor-pointer text-base"
+                        >
+                          {type.label}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="mt-2">
+                <div className="flex flex-wrap gap-2 mt-1">
+                  {allFryTypes.slice(0, 5).map((type) => (
+                    <button
+                      key={type.value}
+                      type="button"
+                      onClick={() => addTag(type)}
+                      className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200"
+                    >
+                      {type.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-base font-medium mb-3">Name on Menu (Optional)</label>
+              <input
+                key="menu-name-input"
+                type="text"
+                value={formData.menuName}
+                onChange={handleMenuNameChange}
+                className="w-full p-4 text-base border rounded-lg"
+                placeholder="Crazy loaded truffle fries"
+              />
+            </div>
+
+            <div className="flex gap-4 mt-8">
+              <button
+                type="button"
+                onClick={handleNext}
+                className="flex-1 bg-yellow-500 text-white py-4 px-6 rounded-lg text-lg font-medium hover:bg-yellow-600"
+              >
+                Submit
+              </button>
+            </div>
+          </div>
+        )}
+
+        {currentPage === 3 && (
+          <div className="space-y-8">
+            <h2 className="text-base font-medium mb-6">Want to give some extra details?</h2>
+            <div className="space-y-8">
+              <RatingScale
+                label="Length"
+                value={formData.length}
+                onChange={(value) => updateFormData({ length: value })}
+              />
+
+              <RatingScale
+                label="Thickness"
+                value={formData.thickness}
+                onChange={(value) => updateFormData({ thickness: value })}
+              />
+
+              <RatingScale
+                label="Crispiness"
+                value={formData.crispiness}
+                onChange={(value) => updateFormData({ crispiness: value })}
+              />
+
+              <RatingScale
+                label="Saltiness"
+                value={formData.saltiness}
+                onChange={(value) => updateFormData({ saltiness: value })}
+              />
+
+              <RatingScale
+                label="Darkness"
+                value={formData.darkness}
+                onChange={(value) => updateFormData({ darkness: value })}
+              />
+            </div>
+
+            <div>
+              <label className="block text-base font-medium mb-3">Comment (Optional)</label>
+              <textarea
+                value={formData.description}
+                onChange={handleDescriptionChange}
+                className="w-full p-4 text-base border rounded-lg"
+                rows="4"
+                placeholder="Describe the fries, any special seasonings, etc."
+              />
+            </div>
+
+            <div className="flex gap-4 mt-8">
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={loading}
+                className="flex-1 bg-yellow-500 text-white py-4 px-6 rounded-lg text-lg font-medium hover:bg-yellow-600 disabled:opacity-50"
+              >
+                {loading ? 'Submitting...' : 'Submit'}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
-
-      <div className="space-y-8">
-        <RatingScale
-          label="Length"
-          value={formData.length}
-          onChange={(value) => setFormData({ ...formData, length: value })}
-        />
-
-        <RatingScale
-          label="Thickness"
-          value={formData.thickness}
-          onChange={(value) => setFormData({ ...formData, thickness: value })}
-        />
-
-        <RatingScale
-          label="Crispiness"
-          value={formData.crispiness}
-          onChange={(value) => setFormData({ ...formData, crispiness: value })}
-        />
-
-        <RatingScale
-          label="Saltiness"
-          value={formData.saltiness}
-          onChange={(value) => setFormData({ ...formData, saltiness: value })}
-        />
-
-        <RatingScale
-          label="Darkness"
-          value={formData.darkness}
-          onChange={(value) => setFormData({ ...formData, darkness: value })}
-        />
-      </div>
-
-      <div className="mt-12 mb-8">
-        <label className="block text-base font-medium mb-3">Comment (Optional)</label>
-        <textarea
-          value={formData.description}
-          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-          className="w-full p-4 text-base border rounded-lg"
-          rows="4"
-          placeholder="Describe the fries, any special seasonings, etc."
-        />
-      </div>
-
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full bg-yellow-500 text-white py-4 px-6 rounded-lg text-lg font-medium hover:bg-yellow-600 disabled:opacity-50"
-      >
-        {loading ? 'Submitting...' : 'Submit Post'}
-      </button>
     </form>
   );
 }
