@@ -216,9 +216,9 @@ export default function PostForm() {
         style.textContent = `
           .pac-container {
             margin-top: 6px !important;
-            background-color: rgba(255, 255, 255, 0.6) !important;
+            background-color: white !important;
             backdrop-filter: blur(8px) !important;
-            border: 1px solid rgba(255, 255, 255, 0.5) !important;
+            border: none !important;
             border-radius: 6px !important;
             box-shadow: none !important;
             font-family: inherit !important;
@@ -544,9 +544,9 @@ export default function PostForm() {
 
     return (
       <div className="bg-white/60 backdrop-blur-sm rounded-md border border-white/50 h-[60px]">
-        <div className="flex items-center h-full gap-2 px-4">
-          <span className="text-base text-gray-500 w-24">{label}</span>
-          <div className="flex gap-1.5 flex-1">
+        <div className="flex items-center h-full gap-1 sm:gap-2 px-2 sm:px-4">
+          <span className="text-base text-gray-500 w-20 sm:w-24">{label}</span>
+          <div className="flex gap-0.5 sm:gap-1.5 flex-1">
             {[1, 2, 3, 4, 5].map((num) => (
               <button
                 key={num}
@@ -560,7 +560,7 @@ export default function PostForm() {
               />
             ))}
           </div>
-          <span className="text-base font-medium text-gray-700 w-24 text-right">
+          <span className="text-base font-medium text-gray-700 w-20 sm:w-24 text-right">
             {value > 0 ? ratingDescriptors[label.toLowerCase()][value] : ''}
           </span>
         </div>
@@ -569,7 +569,7 @@ export default function PostForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-2xl mx-auto p-4 sm:p-6" noValidate>
+    <form onSubmit={handleSubmit} className="max-w-2xl mx-auto p-0 sm:p-6" noValidate>
       {error && (
         <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-md border border-white/50">
           {error}
@@ -646,7 +646,7 @@ export default function PostForm() {
                       className="focus:outline-none"
                     >
                       <svg
-                        className={`w-10 h-10 ${star <= formData.overall ? 'text-yellow-500' : 'text-gray-300'}`}
+                        className={`w-10 h-10 ${star <= formData.overall ? 'text-yellow-500' : 'text-white'}`}
                         fill="currentColor"
                         viewBox="0 0 20 20"
                       >
