@@ -1,12 +1,19 @@
 import Image from 'next/image';
 import { formatRelativeTime } from '../lib/utils';
+import { useState } from 'react';
+import Link from 'next/link';
 
 export default function PostCard({ post }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  
+  const hasSpecificRatings = post.length || post.thickness || post.crispiness || 
+                           post.crunchiness || post.saltiness || post.darkness;
+
   const renderStars = (rating) => {
     return Array(5).fill(0).map((_, index) => (
       <svg
         key={index}
-        className={`w-6 h-6 ${index < rating ? 'text-yellow-500' : 'text-gray-300'}`}
+        className={`w-8 h-8 ${index < rating ? 'text-yellow-500' : 'text-gray-300'}`}
         fill="currentColor"
         viewBox="0 0 20 20"
       >
@@ -17,6 +24,13 @@ export default function PostCard({ post }) {
 
   const getEstablishmentName = (location) => {
     return location.split(',')[0].trim();
+  };
+
+  const createLocationSlug = (location) => {
+    return getEstablishmentName(location)
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
   };
 
   const ratingDescriptors = {
@@ -64,8 +78,6 @@ export default function PostCard({ post }) {
     }
   };
 
-  const hasAdditionalRatings = post.length || post.thickness || post.crispiness || post.crunchiness || post.saltiness || post.darkness;
-
   const renderRatingBar = (label, value, descriptors) => {
     if (!value) return null;
     
@@ -95,43 +107,70 @@ export default function PostCard({ post }) {
 
   return (
     <div className="border rounded-xl overflow-hidden bg-white/65 backdrop-blur-sm">
-      <img 
-        src={post.imageUrl} 
-        alt={post.locationName}
-        className="w-full h-64 object-cover"
-      />
+      <div className="px-4 pt-4">
+        <img 
+          src={post.imageUrl} 
+          alt={post.locationName}
+          className="w-full h-64 object-cover rounded-lg"
+        />
+      </div>
       <div className="p-4">
-        <div className="flex gap-1 mb-2">
+        <div className="flex gap-0.5 mb-1">
           {renderStars(post.overall)}
         </div>
-        {post.menuName && (
-          <p className="text-gray-600 mb-2">{post.menuName}</p>
-        )}
-        <div className="mb-2">
-          <h2 className="text-xl font-semibold text-gray-800">{getEstablishmentName(post.locationName)}</h2>
-        </div>
-        {post.types && post.types.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-4">
-            {post.types.map((type, index) => (
-              <span 
-                key={index}
-                className="inline-flex items-center px-3 py-1 text-sm bg-white/60 backdrop-blur-sm text-gray-700 rounded-full border border-gray-400"
-              >
-                {type}
+        <div className="mb-1">
+          <h2 className="text-2xl font-semibold text-gray-800">
+            <Link href={`/location/${createLocationSlug(post.locationName)}`} className="hover:text-gray-600 transition-colors">
+              {getEstablishmentName(post.locationName)}
+            </Link>
+            {post.menuName && (
+              <span className="text-2xl font-light text-gray-600">
+                {' - '}{post.menuName}
               </span>
-            ))}
-          </div>
-        )}
-        <p className="text-gray-600 mb-4">{post.description}</p>
-        
-        {hasAdditionalRatings && (
-          <div className="space-y-1 mb-4">
-            {renderRatingBar("Length", post.length, ratingDescriptors.length)}
-            {renderRatingBar("Thickness", post.thickness, ratingDescriptors.thickness)}
-            {renderRatingBar("Crispiness", post.crispiness, ratingDescriptors.crispiness)}
-            {renderRatingBar("Crunchiness", post.crunchiness, ratingDescriptors.crunchiness)}
-            {renderRatingBar("Saltiness", post.saltiness, ratingDescriptors.saltiness)}
-            {renderRatingBar("Darkness", post.darkness, ratingDescriptors.darkness)}
+            )}
+          </h2>
+          {post.types && post.types.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-1">
+              {post.types.map((type, index) => (
+                <span 
+                  key={index}
+                  className="inline-flex items-center px-3 py-1 text-sm bg-white/60 backdrop-blur-sm text-gray-700 rounded-full border border-gray-400 capitalize font-normal"
+                >
+                  {type}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+        <p className="text-gray-600 mb-2">{post.description}</p>
+
+        {hasSpecificRatings && (
+          <div className="space-y-1">
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="w-full py-1 text-sm font-medium text-gray-500 hover:text-gray-800 transition-colors flex items-start gap-1 rounded-md"
+            >
+              <svg
+                className={`w-4 h-4 mt-0.5 transition-transform text-gray-500 ${isExpanded ? 'rotate-180' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+              {isExpanded ? 'Less' : 'More'}
+            </button>
+            
+            {isExpanded && (
+              <div className="space-y-1">
+                {renderRatingBar("Length", post.length, ratingDescriptors.length)}
+                {renderRatingBar("Thickness", post.thickness, ratingDescriptors.thickness)}
+                {renderRatingBar("Crispiness", post.crispiness, ratingDescriptors.crispiness)}
+                {renderRatingBar("Crunchiness", post.crunchiness, ratingDescriptors.crunchiness)}
+                {renderRatingBar("Saltiness", post.saltiness, ratingDescriptors.saltiness)}
+                {renderRatingBar("Darkness", post.darkness, ratingDescriptors.darkness)}
+              </div>
+            )}
           </div>
         )}
 
