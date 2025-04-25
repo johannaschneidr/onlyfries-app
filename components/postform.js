@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { storage, db } from '../lib/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc, query, where, getDocs, updateDoc, arrayUnion } from 'firebase/firestore';
 import { useRouter } from 'next/router';
 import { useGoogleMaps } from '../hooks/useGoogleMaps';
 
@@ -448,11 +448,80 @@ export default function PostForm() {
         createdAt: new Date().toISOString()
       };
 
+      console.log('Submitting post data:', postData);
+
+      // Add post to posts collection
       const postsRef = collection(db, 'posts');
-      await addDoc(postsRef, postData);
+      const postDoc = await addDoc(postsRef, postData);
+      console.log('Post document created with ID:', postDoc.id);
+
+      // Update location stats
+      const locationsRef = collection(db, 'locations');
+      const locationQuery = query(locationsRef, where('name', '==', formData.locationName));
+      console.log('Querying locations collection for:', formData.locationName);
+      
+      const locationSnapshot = await getDocs(locationQuery);
+      console.log('Location query result:', locationSnapshot.empty ? 'No existing location found' : 'Found existing location');
+
+      if (locationSnapshot.empty) {
+        console.log('Creating new location document for:', formData.locationName);
+        const locationData = {
+          name: formData.locationName,
+          totalReviews: 1,
+          averageOverall: formData.overall,
+          averageLength: formData.length || 0,
+          averageThickness: formData.thickness || 0,
+          averageCrispiness: formData.crispiness || 0,
+          averageSaltiness: formData.saltiness || 0,
+          averageDarkness: formData.darkness || 0,
+          recentImages: [imageUrl],
+          lastUpdated: new Date().toISOString()
+        };
+        console.log('New location data:', locationData);
+        try {
+          const newLocationDoc = await addDoc(locationsRef, locationData);
+          console.log('New location document created with ID:', newLocationDoc.id);
+        } catch (error) {
+          console.error('Error creating location document:', error);
+          throw error;
+        }
+      } else {
+        console.log('Updating existing location document');
+        const locationDoc = locationSnapshot.docs[0];
+        const locationData = locationDoc.data();
+        console.log('Existing location data:', locationData);
+        
+        const newTotalReviews = locationData.totalReviews + 1;
+
+        const updateAverageField = (field) => {
+          if (!formData[field]) return locationData[`average${field.charAt(0).toUpperCase() + field.slice(1)}`];
+          return (locationData[`average${field.charAt(0).toUpperCase() + field.slice(1)}`] * locationData.totalReviews + formData[field]) / newTotalReviews;
+        };
+
+        const updateData = {
+          totalReviews: newTotalReviews,
+          averageOverall: updateAverageField('overall'),
+          averageLength: updateAverageField('length'),
+          averageThickness: updateAverageField('thickness'),
+          averageCrispiness: updateAverageField('crispiness'),
+          averageSaltiness: updateAverageField('saltiness'),
+          averageDarkness: updateAverageField('darkness'),
+          recentImages: arrayUnion(imageUrl),
+          lastUpdated: new Date().toISOString()
+        };
+        console.log('Location update data:', updateData);
+        try {
+          await updateDoc(locationDoc.ref, updateData);
+          console.log('Location document updated successfully');
+        } catch (error) {
+          console.error('Error updating location document:', error);
+          throw error;
+        }
+      }
+
       router.push('/');
     } catch (error) {
-      console.error('Error submitting post:', error);
+      console.error('Error in handleSubmit:', error);
       setError('Error submitting post. Please try again.');
     } finally {
       setLoading(false);
