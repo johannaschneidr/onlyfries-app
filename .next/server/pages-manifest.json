@@ -3,5 +3,7 @@
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
   "/": "pages/index.js",
+  "/location/[id]": "pages/location/[id].js",
+  "/api/locations/[id]": "pages/api/locations/[id].js",
   "/new": "pages/new.js"
 }
