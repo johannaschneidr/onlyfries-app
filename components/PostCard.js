@@ -10,101 +10,17 @@ export default function PostCard({ post }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showAllGifs, setShowAllGifs] = useState(false);
   const [reactions, setReactions] = useState([]);
-  const [fireCount, setFireCount] = useState(0);
-  const [hasVoted, setHasVoted] = useState(false);
+  const [showReactions, setShowReactions] = useState(false);
   
-  const hasSpecificRatings = post.length || post.thickness || post.crispiness || 
-                           post.crunchiness || post.saltiness || post.darkness;
-
-  useEffect(() => {
-    const fetchReactions = async () => {
-      try {
-        const reactionsRef = collection(db, 'reactions');
-        const q = query(
-          reactionsRef, 
-          where('postId', '==', post.id),
-          where('type', 'in', ['emoji', 'gif'])
-        );
-        const snapshot = await getDocs(q);
-        const reactionsData = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-          createdAt: doc.data().createdAt // Ensure createdAt is included
-        }));
-        
-        // Count fire emoji reactions
-        const fires = reactionsData.filter(r => r.type === 'emoji' && r.content === '🔥');
-        setFireCount(fires.length);
-        setHasVoted(fires.length > 0);
-
-        // Filter out fire reactions from the general reactions (GIFs only)
-        const otherReactions = reactionsData
-          .filter(r => r.type === 'gif')
-          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        setReactions(otherReactions);
-      } catch (error) {
-        console.error('Error fetching reactions:', error);
-      }
-    };
-
-    fetchReactions();
-  }, [post.id]);
-
-  const handleFireClick = async () => {
-    try {
-      const reactionsRef = collection(db, 'reactions');
-      const q = query(
-        reactionsRef,
-        where('postId', '==', post.id),
-        where('type', '==', 'emoji'),
-        where('content', '==', '🔥')
-      );
-      
-      const existingReaction = await getDocs(q);
-      if (!existingReaction.empty) {
-        await deleteDoc(existingReaction.docs[0].ref);
-        setFireCount(prev => prev - 1);
-        setHasVoted(false);
-      } else {
-        await addDoc(reactionsRef, {
-          postId: post.id,
-          type: 'emoji',
-          content: '🔥',
-          createdAt: new Date().toISOString()
-        });
-        setFireCount(prev => prev + 1);
-        setHasVoted(true);
-      }
-    } catch (error) {
-      console.error('Error toggling fire reaction:', error);
-    }
+  const overallRatingDescriptors = {
+    1: "Yikes",
+    2: "Meh",
+    3: "Solid",
+    4: "Crack",
+    5: "F***in Slaying"
   };
 
-  const renderStars = (rating) => {
-    return Array(5).fill(0).map((_, index) => (
-      <svg
-        key={index}
-        className={`w-8 h-8 ${index < rating ? 'text-yellow-500' : 'text-gray-300'}`}
-        fill="currentColor"
-        viewBox="0 0 20 20"
-      >
-        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-      </svg>
-    ));
-  };
-
-  const getEstablishmentName = (location) => {
-    return location.split(',')[0].trim();
-  };
-
-  const createLocationSlug = (location) => {
-    return getEstablishmentName(location)
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/(^-|-$)/g, '');
-  };
-
-  const ratingDescriptors = {
+  const specificRatingDescriptors = {
     length: {
       1: "Tiny",
       2: "Shorty",
@@ -149,6 +65,66 @@ export default function PostCard({ post }) {
     }
   };
 
+  const hasSpecificRatings = post.length || post.thickness || post.crispiness || 
+                           post.crunchiness || post.saltiness || post.darkness;
+
+  const fetchReactions = async () => {
+    try {
+      const reactionsRef = collection(db, 'reactions');
+      const q = query(
+        reactionsRef, 
+        where('postId', '==', post.id),
+        where('type', 'in', ['emoji', 'gif'])
+      );
+      const snapshot = await getDocs(q);
+      const reactionsData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt
+      }));
+      
+      // Filter out fire reactions from the general reactions (GIFs only)
+      const otherReactions = reactionsData
+        .filter(r => r.type === 'gif')
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      setReactions(otherReactions);
+    } catch (error) {
+      console.error('Error fetching reactions:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchReactions();
+  }, [post.id]);
+
+  const handleNewReaction = (newReaction) => {
+    setReactions(prev => [newReaction, ...prev]);
+  };
+
+  const renderStars = (rating) => {
+    return Array(5).fill(0).map((_, index) => (
+      <svg
+        key={index}
+        className={`w-10 h-10 ${index < rating ? 'text-yellow-500' : 'text-gray-300'} -mr-1`}
+        fill="currentColor"
+        viewBox="0 0 20 20"
+      >
+        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+      </svg>
+    ));
+  };
+
+  const getEstablishmentName = (location) => {
+    return location.split(',')[0].trim();
+  };
+
+  const createLocationSlug = (location) => {
+    return getEstablishmentName(location)
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
+  };
+
   const renderRatingBar = (label, value, descriptors) => {
     if (!value) return null;
     
@@ -176,36 +152,48 @@ export default function PostCard({ post }) {
     );
   };
 
-  const visibleReactions = showAllGifs ? reactions : reactions.slice(0, 2);
-  const hiddenReactionsCount = reactions.length - 2;
+  const visibleReactions = showAllGifs ? reactions : reactions.slice(0, 1);
+  const hiddenReactionsCount = reactions.length - 1;
 
   return (
     <div className="border rounded-xl overflow-hidden bg-white/65 backdrop-blur-sm">
       <div className="p-4">
-        <img 
-          src={post.imageUrl} 
-          alt={post.locationName}
-          className="w-full h-64 object-cover rounded-lg"
-        />
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+              <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            </div>
+            <span className="text-sm text-gray-600">Username</span>
+          </div>
+          <span className="text-sm text-gray-500">
+            {formatRelativeTime(post.createdAt)}
+          </span>
+        </div>
+        <div className="relative">
+          <img 
+            src={post.imageUrl} 
+            alt={post.locationName}
+            className="w-full h-64 object-cover rounded-lg"
+          />
+          <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/60 to-transparent rounded-b-lg">
+            <div className="flex items-center gap-2">
+              <div className="flex gap-0">
+                {renderStars(post.overall)}
+              </div>
+              <span className="text-sm font-medium text-white">
+                {overallRatingDescriptors[Math.round(post.overall)]}
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
       
       <div className="px-4 pb-4">
-        <div className="flex gap-0.5">
-          {renderStars(post.overall)}
-        </div>
         <div className="mt-1">
-          <h2 className="text-2xl font-semibold text-gray-800">
-            <Link href={`/location/${createLocationSlug(post.locationName)}`} className="hover:text-gray-600 transition-colors">
-              {getEstablishmentName(post.locationName)}
-            </Link>
-            {post.menuName && (
-              <span className="text-2xl font-light text-gray-600">
-                {' - '}{post.menuName}
-              </span>
-            )}
-          </h2>
           {post.types && post.types.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-1">
+            <div className="flex flex-wrap gap-2 mb-2">
               {post.types.map((type, index) => (
                 <span 
                   key={index}
@@ -216,8 +204,18 @@ export default function PostCard({ post }) {
               ))}
             </div>
           )}
+          <h2 className="text-2xl font-semibold text-gray-800">
+            <Link href={`/location/${createLocationSlug(post.locationName)}`} className="hover:text-gray-600 transition-colors">
+              {getEstablishmentName(post.locationName)}
+            </Link>
+            {post.menuName && (
+              <span className="text-2xl font-light text-gray-600">
+                {' - '}{post.menuName}
+              </span>
+            )}
+          </h2>
+          <p className="text-gray-600 mb-2">{post.description}</p>
         </div>
-        <p className="text-gray-600 mb-2">{post.description}</p>
 
         {hasSpecificRatings && (
           <div className="space-y-1">
@@ -233,99 +231,38 @@ export default function PostCard({ post }) {
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
-              {isExpanded ? 'Less' : 'More'}
+              {isExpanded ? 'Hide' : 'Details'}
             </button>
             
             {isExpanded && (
               <div className="space-y-1">
-                {renderRatingBar("Length", post.length, ratingDescriptors.length)}
-                {renderRatingBar("Thickness", post.thickness, ratingDescriptors.thickness)}
-                {renderRatingBar("Crispiness", post.crispiness, ratingDescriptors.crispiness)}
-                {renderRatingBar("Crunchiness", post.crunchiness, ratingDescriptors.crunchiness)}
-                {renderRatingBar("Saltiness", post.saltiness, ratingDescriptors.saltiness)}
-                {renderRatingBar("Darkness", post.darkness, ratingDescriptors.darkness)}
+                {renderRatingBar("Length", post.length, specificRatingDescriptors.length)}
+                {renderRatingBar("Thickness", post.thickness, specificRatingDescriptors.thickness)}
+                {renderRatingBar("Crispiness", post.crispiness, specificRatingDescriptors.crispiness)}
+                {renderRatingBar("Crunchiness", post.crunchiness, specificRatingDescriptors.crunchiness)}
+                {renderRatingBar("Saltiness", post.saltiness, specificRatingDescriptors.saltiness)}
+                {renderRatingBar("Darkness", post.darkness, specificRatingDescriptors.darkness)}
               </div>
             )}
           </div>
         )}
-      </div>
 
-      <div className="border-t border-gray-100">
-        <div className="p-4 space-y-4">
-          <div className="flex items-center">
-            <button
-              onClick={handleFireClick}
-              className={`flex items-center gap-1 px-2 py-1 rounded-full border transition-colors ${
-                hasVoted 
-                  ? 'bg-yellow-50 border-yellow-200 text-yellow-600' 
-                  : 'bg-white/60 hover:bg-white/80 border-gray-200'
-              }`}
-            >
-              <span className="text-base">🔥</span>
-              {fireCount > 0 && (
-                <span className="text-xs font-medium">{fireCount}</span>
-              )}
-            </button>
-            <div className="flex items-center gap-2 ml-auto mr-3">
-              <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-                <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-              </div>
-              <span className="text-sm text-gray-600">Username</span>
-            </div>
-            <span className="text-sm text-gray-500">
-              {formatRelativeTime(post.createdAt)}
-            </span>
-          </div>
-
-          <div className="w-full">
-            <ReactionPicker
-              postId={post.id}
-              onClose={() => {}}
-            />
-          </div>
+        <div className="mt-4">
+          <ReactionPicker
+            postId={post.id}
+            onReactionAdded={handleNewReaction}
+          />
 
           {reactions.length > 0 && (
-            <div className="space-y-3">
-              {visibleReactions.map((reaction) => (
-                <div
-                  key={reaction.id}
-                  className="p-3 space-y-3"
-                >
-                  <div className="flex items-center">
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-gray-200 flex-shrink-0 flex items-center justify-center">
-                        <svg className="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
-                      </div>
-                      <span className="text-sm font-medium text-gray-900">
-                        {reaction.username || 'User'}
-                      </span>
-                    </div>
-                    <span className="text-sm text-gray-500 ml-auto">
-                      {formatRelativeTime(reaction.createdAt)}
-                    </span>
-                  </div>
-                  <img
-                    src={reaction.content}
-                    alt="Reaction GIF"
-                    className="rounded-lg w-full max-h-48 object-cover"
-                  />
-                </div>
-              ))}
-
-              {reactions.length > 2 && (
+            <div className="mt-4">
+              {!showReactions ? (
                 <button
-                  onClick={() => setShowAllGifs(!showAllGifs)}
+                  onClick={() => setShowReactions(true)}
                   className="w-full py-2 px-3 text-sm font-medium text-gray-600 hover:text-gray-900 bg-white/60 backdrop-blur-sm rounded-lg border border-gray-200 flex items-center justify-center gap-1 transition-colors"
                 >
-                  <span>
-                    {showAllGifs ? 'Show Less' : `Show ${hiddenReactionsCount} More Reaction${hiddenReactionsCount > 1 ? 's' : ''}`}
-                  </span>
+                  <span>Show {reactions.length} Reaction{reactions.length > 1 ? 's' : ''}</span>
                   <svg
-                    className={`w-4 h-4 transition-transform ${showAllGifs ? 'rotate-180' : ''}`}
+                    className="w-4 h-4"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -333,6 +270,43 @@ export default function PostCard({ post }) {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
+              ) : (
+                <div className="space-y-4">
+                  {reactions.map((reaction) => (
+                    <div
+                      key={reaction.id}
+                      className="space-y-1"
+                    >
+                      <img
+                        src={reaction.content}
+                        alt="Reaction GIF"
+                        className="rounded-lg w-full object-contain"
+                      />
+                      <div className="flex justify-end items-center gap-2">
+                        <span className="text-sm font-medium text-gray-900">
+                          {reaction.username || 'User'}
+                        </span>
+                        <span className="text-sm text-gray-500">
+                          {formatRelativeTime(reaction.createdAt)}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                  <button
+                    onClick={() => setShowReactions(false)}
+                    className="w-full py-2 px-3 text-sm font-medium text-gray-600 hover:text-gray-900 bg-white/60 backdrop-blur-sm rounded-lg border border-gray-200 flex items-center justify-center gap-1 transition-colors"
+                  >
+                    <span>Hide Reactions</span>
+                    <svg
+                      className="w-4 h-4 rotate-180"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                </div>
               )}
             </div>
           )}
