@@ -7,10 +7,6 @@
     "start": "next start"
   },
   "dependencies": {
-    "@firebase/analytics": "^0.10.12",
-    "@firebase/auth": "^1.10.0",
-    "@firebase/firestore": "^4.7.10",
-    "@firebase/storage": "^0.13.7",
     "autoprefixer": "^10.x",
     "firebase": "^10.14.1",
     "next": "^13.x",
