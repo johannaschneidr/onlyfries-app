@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { db } from '../lib/firebase';
 import { collection, addDoc, deleteDoc, query, where, getDocs } from 'firebase/firestore';
+import { getAuth } from "firebase/auth";
+import { connectAuthEmulator } from "firebase/auth";
 
 export default function ReactionPicker({ postId, onReactionAdded }) {
   const [showGifSearch, setShowGifSearch] = useState(false);
@@ -133,6 +135,15 @@ export default function ReactionPicker({ postId, onReactionAdded }) {
     setSearchQuery('');
     setGifs([]);
     setShowGifSearch(false);
+  };
+
+  const setupRecaptcha = () => {
+    if (!window.recaptchaVerifier) {
+      window.recaptchaVerifier = new RecaptchaVerifier('recaptcha-container', {
+        size: 'invisible',
+        callback: () => {},
+      }, auth);
+    }
   };
 
   return (

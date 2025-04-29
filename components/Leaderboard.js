@@ -115,7 +115,7 @@ export default function Leaderboard() {
         locationsRef,
         orderBy('averageOverall', 'desc'),
         orderBy('totalReviews', 'desc'),
-        limit(3)
+        limit(5)
       );
 
       const querySnapshot = await getDocs(q);
@@ -146,7 +146,7 @@ export default function Leaderboard() {
         where('lastUpdated', '>=', oneWeekAgo.toISOString()),
         orderBy('lastUpdated', 'desc'),
         orderBy('averageOverall', 'desc'),
-        limit(3)
+        limit(5)
       );
 
       const querySnapshot = await getDocs(q);
@@ -172,7 +172,7 @@ export default function Leaderboard() {
       const q = query(
         locationsRef,
         orderBy('totalReviews', 'desc'),
-        limit(3)
+        limit(5)
       );
 
       const querySnapshot = await getDocs(q);
@@ -250,52 +250,51 @@ export default function Leaderboard() {
 
   return (
     <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4">
-      <h2 className="text-xl font-semibold mb-3">Hottest Fries in Town</h2>
-      <div className="flex flex-wrap gap-2 mb-4">
+      <div className="flex gap-4 mb-4">
         <button
           onClick={() => setActiveTab('best-overall')}
-          className={`inline-flex items-center px-4 py-1.5 text-sm font-medium bg-white/60 backdrop-blur-sm text-gray-700 rounded-full border border-gray-400 whitespace-nowrap ${
-            activeTab === 'best-overall' ? 'bg-yellow-500 text-white border-yellow-500' : 'hover:bg-white/80'
+          className={`text-base font-medium text-gray-700 whitespace-nowrap ${
+            activeTab === 'best-overall' ? 'text-yellow-500' : 'hover:text-gray-900'
           }`}
         >
           Best Overall
         </button>
         <button
           onClick={() => setActiveTab('trending')}
-          className={`inline-flex items-center px-4 py-1.5 text-sm font-medium bg-white/60 backdrop-blur-sm text-gray-700 rounded-full border border-gray-400 whitespace-nowrap ${
-            activeTab === 'trending' ? 'bg-yellow-500 text-white border-yellow-500' : 'hover:bg-white/80'
+          className={`text-base font-medium text-gray-700 whitespace-nowrap ${
+            activeTab === 'trending' ? 'text-yellow-500' : 'hover:text-gray-900'
           }`}
         >
           Trending
         </button>
         <button
           onClick={() => setActiveTab('most-reviewed')}
-          className={`inline-flex items-center px-4 py-1.5 text-sm font-medium bg-white/60 backdrop-blur-sm text-gray-700 rounded-full border border-gray-400 whitespace-nowrap ${
-            activeTab === 'most-reviewed' ? 'bg-yellow-500 text-white border-yellow-500' : 'hover:bg-white/80'
+          className={`text-base font-medium text-gray-700 whitespace-nowrap ${
+            activeTab === 'most-reviewed' ? 'text-yellow-500' : 'hover:text-gray-900'
           }`}
         >
           Most Reviews
         </button>
       </div>
-      <div className="space-y-2">
+      <div className="space-y-1">
         {topFries.map((fry, index) => (
           <div 
             key={fry.id} 
-            className="flex flex-col gap-3 p-3 bg-white/60 backdrop-blur-sm rounded-lg"
+            className="flex flex-col gap-2 py-2 border-b border-gray-200 last:border-b-0"
           >
             <div 
               className="flex items-start gap-3 cursor-pointer"
               onClick={() => setExpandedCard(expandedCard === fry.id ? null : fry.id)}
             >
               <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <h3 className="font-medium text-2xl">
+                <div className="flex flex-col gap-1">
+                  <h3 className="font-medium text-base">
                     {fry.name.split(',')[0]}
                   </h3>
+                  <span className="text-xs text-gray-500">
+                    {fry.totalReviews} review{fry.totalReviews !== 1 ? 's' : ''}
+                  </span>
                 </div>
-                <p className="text-lg text-gray-500">
-                  {fry.menuName || 'Fries'}
-                </p>
                 {expandedCard === fry.id && (
                   <a
                     href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fry.name)}`}
@@ -316,15 +315,12 @@ export default function Leaderboard() {
                   <span className="w-10 h-10 flex items-center justify-center text-lg font-semibold bg-yellow-500 text-white rounded-full p-2">
                     {fry.averageOverall.toFixed(1)}
                   </span>
-                  <span className="text-xs text-gray-500 mt-1 w-16 text-right">
-                    {fry.totalReviews} review{fry.totalReviews !== 1 ? 's' : ''}
-                  </span>
                 </div>
               </div>
             </div>
             {expandedCard === fry.id && (
               <>
-                <div className="space-y-3 mt-2 pt-2 border-t border-white/50">
+                <div className="space-y-3 mt-2">
                   {fry.averageLength || fry.averageThickness || fry.averageCrispiness || fry.averageSaltiness || fry.averageDarkness ? (
                     <>
                       {renderRatingBar("Length", Math.round(fry.averageLength), ratingDescriptors.length)}
@@ -338,7 +334,7 @@ export default function Leaderboard() {
                   )}
                 </div>
                 {fry.recentImages && fry.recentImages.length > 0 && (
-                  <div className="mt-4 pt-4 border-t border-white/50">
+                  <div className="mt-4">
                     <h4 className="text-sm font-medium text-gray-500 mb-3">Recent Uploads</h4>
                     <div className="space-y-3">
                       <div className="relative aspect-[4/3] rounded-lg overflow-hidden">
@@ -376,7 +372,7 @@ export default function Leaderboard() {
                 )}
                 <button
                   onClick={() => setExpandedCard(null)}
-                  className="flex items-center gap-2 mt-4 pt-4 border-t border-white/50 text-gray-500 hover:text-gray-700 transition-colors"
+                  className="flex items-center gap-2 mt-4 text-gray-500 hover:text-gray-700 transition-colors"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 15l7-7 7 7" />
