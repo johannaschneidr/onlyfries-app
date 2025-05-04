@@ -1,6 +1,7 @@
 import { formatRelativeTime } from '../lib/utils';
 import PostCard from './PostCard';
 import { useState } from 'react';
+import CategoryAveragesDisplay from './CategoryAveragesDisplay';
 
 export default function LocationProfile({ locationData }) {
   const {
@@ -138,12 +139,14 @@ export default function LocationProfile({ locationData }) {
         </div>
 
         <div className="mt-6 space-y-2">
-          {renderRatingBar("Length", averageLength, ratingDescriptors.length)}
-          {renderRatingBar("Thickness", averageThickness, ratingDescriptors.thickness)}
-          {renderRatingBar("Crispiness", averageCrispiness, ratingDescriptors.crispiness)}
-          {renderRatingBar("Crunchiness", averageCrunchiness, ratingDescriptors.crunchiness)}
-          {renderRatingBar("Saltiness", averageSaltiness, ratingDescriptors.saltiness)}
-          {renderRatingBar("Darkness", averageDarkness, ratingDescriptors.darkness)}
+          <CategoryAveragesDisplay
+            length={averageLength}
+            thickness={averageThickness}
+            crispiness={averageCrispiness}
+            crunchiness={averageCrunchiness}
+            saltiness={averageSaltiness}
+            darkness={averageDarkness}
+          />
         </div>
       </div>
 

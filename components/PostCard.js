@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { db } from '../lib/firebase';
 import { collection, query, where, getDocs, addDoc, deleteDoc } from 'firebase/firestore';
 import ReactionPicker from './ReactionPicker';
+import CategoryDisplay from './CategoryDisplay';
 
 export default function PostCard({ post }) {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -236,12 +237,14 @@ export default function PostCard({ post }) {
             
             {isExpanded && (
               <div className="space-y-1">
-                {renderRatingBar("Length", post.length, specificRatingDescriptors.length)}
-                {renderRatingBar("Thickness", post.thickness, specificRatingDescriptors.thickness)}
-                {renderRatingBar("Crispiness", post.crispiness, specificRatingDescriptors.crispiness)}
-                {renderRatingBar("Crunchiness", post.crunchiness, specificRatingDescriptors.crunchiness)}
-                {renderRatingBar("Saltiness", post.saltiness, specificRatingDescriptors.saltiness)}
-                {renderRatingBar("Darkness", post.darkness, specificRatingDescriptors.darkness)}
+                <CategoryDisplay
+                  length={post.length}
+                  thickness={post.thickness}
+                  crispiness={post.crispiness}
+                  crunchiness={post.crunchiness}
+                  saltiness={post.saltiness}
+                  darkness={post.darkness}
+                />
               </div>
             )}
           </div>

@@ -1,3 +1,5 @@
+import { db } from '../../../lib/firebase';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { getPosts } from '../../../lib/api';
 
 const createLocationSlug = (location) => {
@@ -20,49 +22,50 @@ export default async function handler(req, res) {
   }
 
   try {
-    const posts = await getPosts();
-    console.log('Looking for location with slug:', id);
+    // First try to get data from locations collection
+    const locationsRef = collection(db, 'locations');
+    const locationSnapshot = await getDocs(locationsRef);
 
-    const locationPosts = posts.filter(post => {
-      if (!post.locationName) return false;
-      const postSlug = createLocationSlug(post.locationName);
-      return postSlug === id;
+    // Find location by matching slug
+    const locationDoc = locationSnapshot.docs.find(doc => {
+      const locationData = doc.data();
+      const locationSlug = createLocationSlug(locationData.name);
+      return locationSlug === id;
     });
 
-    console.log('Found posts:', locationPosts);
+    if (locationDoc) {
+      const locationData = locationDoc.data();
 
-    if (locationPosts.length === 0) {
-      return res.status(404).json({ message: 'Location not found' });
+      // Get recent posts
+      const posts = await getPosts();
+      const recentPosts = posts
+        .filter(post => {
+          if (!post.locationName) return false;
+          const postSlug = createLocationSlug(post.locationName);
+          return postSlug === id;
+        })
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        .slice(0, 5);
+
+      const responseData = {
+        name: locationData.name,
+        totalPosts: locationData.totalReviews,
+        overall: locationData.averageOverall,
+        length: locationData.averageLength,
+        thickness: locationData.averageThickness,
+        crispiness: locationData.averageCrispiness,
+        crunchiness: locationData.averageCrunchiness,
+        saltiness: locationData.averageSaltiness,
+        darkness: locationData.averageDarkness,
+        recentPosts
+      };
+
+      console.log('Sending response from locations collection:', responseData);
+      return res.status(200).json(responseData);
     }
 
-    const locationName = locationPosts[0].locationName;
-    const totalPosts = locationPosts.length;
-
-    // Calculate averages
-    const averages = {
-      overall: calculateAverage(locationPosts, 'overall'),
-      length: calculateAverage(locationPosts, 'length'),
-      thickness: calculateAverage(locationPosts, 'thickness'),
-      crispiness: calculateAverage(locationPosts, 'crispiness'),
-      crunchiness: calculateAverage(locationPosts, 'crunchiness'),
-      saltiness: calculateAverage(locationPosts, 'saltiness'),
-      darkness: calculateAverage(locationPosts, 'darkness'),
-    };
-
-    // Get recent posts (last 5)
-    const recentPosts = locationPosts
-      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-      .slice(0, 5);
-
-    const responseData = {
-      name: locationName,
-      totalPosts,
-      ...averages,
-      recentPosts
-    };
-
-    console.log('Sending response:', responseData);
-    res.status(200).json(responseData);
+    // If location not found in locations collection, return 404
+    return res.status(404).json({ message: 'Location not found' });
   } catch (error) {
     console.error('Error in location API:', error);
     res.status(500).json({ 
@@ -70,12 +73,4 @@ export default async function handler(req, res) {
       error: error.message 
     });
   }
-}
-
-function calculateAverage(posts, field) {
-  const validPosts = posts.filter(post => post[field] !== undefined && post[field] !== null);
-  if (validPosts.length === 0) return null;
-  
-  const sum = validPosts.reduce((acc, post) => acc + post[field], 0);
-  return sum / validPosts.length;
 } 
