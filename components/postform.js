@@ -498,6 +498,9 @@ export default function PostForm() {
           return (locationData[`average${field.charAt(0).toUpperCase() + field.slice(1)}`] * locationData.totalReviews + formData[field]) / newTotalReviews;
         };
 
+        let recentImages = locationData.recentImages || [];
+        recentImages = [imageUrl, ...recentImages.filter(url => url !== imageUrl)].slice(0, 5);
+
         const updateData = {
           totalReviews: newTotalReviews,
           averageOverall: updateAverageField('overall'),
@@ -506,7 +509,6 @@ export default function PostForm() {
           averageCrispiness: updateAverageField('crispiness'),
           averageSaltiness: updateAverageField('saltiness'),
           averageDarkness: updateAverageField('darkness'),
-          recentImages: arrayUnion(imageUrl),
           lastUpdated: new Date().toISOString()
         };
         console.log('Location update data:', updateData);

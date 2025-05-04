@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { db } from '../lib/firebase';
 import { collection, query, where, orderBy, limit, getDocs, addDoc, deleteDoc, doc } from 'firebase/firestore';
 import Image from 'next/image';
+import Link from 'next/link';
 
 export default function Leaderboard() {
   const [topFries, setTopFries] = useState([]);
@@ -296,18 +297,30 @@ export default function Leaderboard() {
                   </span>
                 </div>
                 {expandedCard === fry.id && (
-                  <a
-                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fry.name)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-1 text-gray-500 hover:text-yellow-500 transition-colors mt-4"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" />
-                    </svg>
-                    <span className="text-sm">Open in Google Maps</span>
-                  </a>
+                  <div className="flex items-center gap-4 mt-4">
+                    <Link
+                      href={`/location/${fry.name.split(',')[0].trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}`}
+                      className="flex items-center gap-1 text-gray-500 hover:text-yellow-500 transition-colors"
+                      onClick={e => e.stopPropagation()}
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 21c-4.418 0-8-4.03-8-9a8 8 0 1116 0c0 4.97-3.582 9-8 9zm0-11a2 2 0 100 4 2 2 0 000-4z" />
+                      </svg>
+                      <span className="text-sm">Full profile</span>
+                    </Link>
+                    <a
+                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fry.name)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1 text-gray-500 hover:text-yellow-500 transition-colors"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" />
+                      </svg>
+                      <span className="text-sm">Open in Google Maps</span>
+                    </a>
+                  </div>
                 )}
               </div>
               <div className="flex items-center gap-2">
