@@ -96,7 +96,8 @@ export default function Leaderboard() {
       const images = querySnapshot.docs.map(doc => ({
         id: doc.id,
         imageUrl: doc.data().imageUrl,
-        createdAt: doc.data().createdAt
+        createdAt: doc.data().createdAt,
+        username: doc.data().username || 'Anonymous'
       }));
 
       setLocationImages(prev => ({
@@ -352,28 +353,33 @@ export default function Leaderboard() {
                     <div className="space-y-3">
                       <div className="relative aspect-[4/3] rounded-lg overflow-hidden">
                         <img
-                          src={fry.recentImages[selectedImageIndex[fry.id] || 0]}
+                          src={fry.recentImages[selectedImageIndex[fry.id] || 0].imageUrl}
                           alt="Recent fries from this location"
                           className="w-full h-full object-cover"
                         />
+                        <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/60 to-transparent">
+                          <span className="text-sm font-medium text-white">
+                            {fry.recentImages[selectedImageIndex[fry.id] || 0].username}
+                          </span>
+                        </div>
                       </div>
                       <div className="grid grid-cols-5 gap-1.5">
-                        {fry.recentImages.map((image, index) => (
+                        {fry.recentImages.map((img, idx) => (
                           <button
-                            key={index}
-                            onClick={(e) => {
+                            key={idx}
+                            onClick={e => {
                               e.stopPropagation();
                               setSelectedImageIndex(prev => ({
                                 ...prev,
-                                [fry.id]: index
+                                [fry.id]: idx
                               }));
                             }}
                             className={`relative aspect-square rounded-lg overflow-hidden transition-opacity ${
-                              index === (selectedImageIndex[fry.id] || 0) ? 'ring-2 ring-yellow-500' : 'hover:opacity-80'
+                              idx === (selectedImageIndex[fry.id] || 0) ? 'ring-2 ring-yellow-500' : 'hover:opacity-80'
                             }`}
                           >
                             <img
-                              src={image}
+                              src={img.imageUrl}
                               alt="Recent fries from this location"
                               className="w-full h-full object-cover"
                             />

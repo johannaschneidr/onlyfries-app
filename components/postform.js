@@ -4,6 +4,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { collection, addDoc, query, where, getDocs, updateDoc, arrayUnion } from 'firebase/firestore';
 import { useRouter } from 'next/router';
 import { useGoogleMaps } from '../hooks/useGoogleMaps';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function PostForm() {
   // Add ratingDescriptors at the top level
@@ -40,6 +41,7 @@ export default function PostForm() {
   const inputElementRef = useRef(null);
   const router = useRouter();
   const { isLoaded: isGoogleMapsLoaded, error: googleMapsError } = useGoogleMaps();
+  const { user } = useAuth();
 
   // Check for temporary image in localStorage on component mount
   useEffect(() => {
@@ -445,7 +447,8 @@ export default function PostForm() {
       const postData = {
         ...formData,
         imageUrl,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        username: user?.displayName || 'Anonymous',
       };
 
       console.log('Submitting post data:', postData);
@@ -474,7 +477,7 @@ export default function PostForm() {
           averageCrispiness: formData.crispiness || 0,
           averageSaltiness: formData.saltiness || 0,
           averageDarkness: formData.darkness || 0,
-          recentImages: [imageUrl],
+          recentImages: [{ imageUrl, username: user?.displayName || 'Anonymous' }],
           lastUpdated: new Date().toISOString()
         };
         console.log('New location data:', locationData);
@@ -499,7 +502,8 @@ export default function PostForm() {
         };
 
         let recentImages = locationData.recentImages || [];
-        recentImages = [imageUrl, ...recentImages.filter(url => url !== imageUrl)].slice(0, 5);
+        const newImageObj = { imageUrl, username: user?.displayName || 'Anonymous' };
+        recentImages = [newImageObj, ...recentImages.filter(img => img.imageUrl !== imageUrl)].slice(0, 5);
 
         const updateData = {
           totalReviews: newTotalReviews,
@@ -509,7 +513,8 @@ export default function PostForm() {
           averageCrispiness: updateAverageField('crispiness'),
           averageSaltiness: updateAverageField('saltiness'),
           averageDarkness: updateAverageField('darkness'),
-          lastUpdated: new Date().toISOString()
+          lastUpdated: new Date().toISOString(),
+          recentImages,
         };
         console.log('Location update data:', updateData);
         try {
