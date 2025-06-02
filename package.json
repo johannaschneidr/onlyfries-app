@@ -9,6 +9,7 @@
   "dependencies": {
     "autoprefixer": "^10.x",
     "firebase": "^10.14.1",
+    "firebase-admin": "^13.4.0",
     "next": "^13.x",
     "postcss": "^8.x",
     "react": "^18.x",
