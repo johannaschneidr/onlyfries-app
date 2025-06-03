@@ -19,7 +19,6 @@ export default function Navbar() {
           width={120}
           height={40}
           priority
-          fetchpriority="high"
           sizes="(max-width: 768px) 120px, 120px"
           style={{ width: 'auto', height: 'auto' }}
         />

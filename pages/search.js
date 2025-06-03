@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import Navbar from '../components/navbar';
 import { getAllLocations } from '../lib/api';
@@ -6,6 +6,7 @@ import CategoryAveragesDisplay from '../components/CategoryAveragesDisplay';
 import SearchResult from '../components/SearchResult';
 import { collection, query as firestoreQuery, where, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '../lib/firebase';
+import TagTypeDropdown from '../components/TagTypeDropdown';
 
 const ratingDescriptors = {
   length: {
@@ -67,6 +68,46 @@ export default function SearchPage() {
   const [locationImages, setLocationImages] = useState({});
   const [expandedCard, setExpandedCard] = useState(null);
 
+  // Fry Type Categories (copied from PostForm)
+  const fryTypes = {
+    'Classic Styles': [
+      { value: 'classic', label: 'Classic' },
+      { value: 'shoestring', label: 'Shoestring' },
+      { value: 'steak-cut', label: 'Steak Cut' },
+      { value: 'home-style', label: 'Home Style' },
+      { value: 'skin-on', label: 'Skin-On' }
+    ],
+    'Specialty Cuts': [
+      { value: 'waffle', label: 'Waffle Style' },
+      { value: 'crinkle-cut', label: 'Crinkle Cut' },
+      { value: 'tornado', label: 'Tornado' },
+      { value: 'curly', label: 'Curly' },
+      { value: 'wavy', label: 'Wavy' }
+    ],
+    'Alternative Fries': [
+      { value: 'sweet-potato', label: 'Sweet Potato' },
+      { value: 'hash-brown', label: 'Hash Brown' },
+      { value: 'non-potato', label: 'Non-Potato' },
+      { value: 'tater-tots', label: 'Tater Tots' },
+      { value: 'polenta', label: 'Polenta Fries' }
+    ],
+    'Flavor Profiles': [
+      { value: 'spiced', label: 'Spiced' },
+      { value: 'loaded', label: 'Loaded' },
+      { value: 'seasoned', label: 'Seasoned' },
+      { value: 'garlic', label: 'Garlic' },
+      { value: 'truffle', label: 'Truffle' }
+    ]
+  };
+  const allFryTypes = Object.values(fryTypes).flat();
+  // Tag filter state
+  const [typeTags, setTypeTags] = useState([]);
+  const [tagInput, setTagInput] = useState('');
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const tagInputRef = useRef(null);
+  const tagInputContainerRef = useRef(null);
+
   useEffect(() => {
     const fetchLocations = async () => {
       try {
@@ -113,10 +154,16 @@ export default function SearchPage() {
         );
       }
     });
+    // Apply fry type tags filter
+    if (typeTags.length > 0) {
+      filtered = filtered.filter(location =>
+        Array.isArray(location.types) && typeTags.some(tag => location.types.includes(tag))
+      );
+    }
     // Sort by match score
     filtered.sort((a, b) => getMatchScore(a) - getMatchScore(b));
     setFilteredLocations(filtered);
-  }, [filters, locations]);
+  }, [filters, locations, typeTags]);
 
   const handleFilterChange = (category, value) => {
     setFilters(prev => ({
@@ -134,12 +181,15 @@ export default function SearchPage() {
             <button
               key={num}
               onClick={() => handleFilterChange(category, num)}
-              className={`w-full h-6 rounded-md flex items-center justify-center text-xs font-medium transition-colors
+              className={`w-full h-8 rounded-md flex items-center justify-center text-xs font-medium transition-colors
                 ${filters[category] === num 
                   ? 'bg-yellow-500 text-white' 
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
-            />
+              aria-label={`Set ${label} to ${num}`}
+            >
+              {/* No number shown */}
+            </button>
           ))}
         </div>
         <span className="text-sm font-medium text-gray-700 w-20 text-right">
@@ -160,12 +210,71 @@ export default function SearchPage() {
         limit(5)
       );
       const querySnapshot = await getDocs(q);
-      const images = querySnapshot.docs.map(doc => doc.data().imageUrl);
+      const images = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        imageUrl: doc.data().imageUrl,
+        createdAt: doc.data().createdAt,
+        username: doc.data().username || 'Anonymous',
+      }));
       setLocationImages(prev => ({ ...prev, [locationName]: images }));
     } catch (error) {
       console.error('Error fetching location images:', error);
     }
   };
+
+  // Tag input handlers (copied from PostForm)
+  const handleTagInputChange = (e) => {
+    const value = e.target.value;
+    setTagInput(value);
+    if (value) {
+      const filtered = allFryTypes.filter(type => 
+        type.label.toLowerCase().includes(value.toLowerCase()) &&
+        !typeTags.includes(type.value)
+      );
+      setSuggestions(filtered);
+      setShowSuggestions(true);
+    } else {
+      // Show all available options if input is empty
+      const filtered = allFryTypes.filter(type => !typeTags.includes(type.value));
+      setSuggestions(filtered);
+      setShowSuggestions(true);
+    }
+  };
+  const addTag = (type) => {
+    if (!typeTags.includes(type.value)) {
+      setTypeTags(prev => [...prev, type.value]);
+    }
+    setTagInput('');
+    setShowSuggestions(false);
+  };
+  const removeTag = (typeToRemove) => {
+    setTypeTags(prev => prev.filter(type => type !== typeToRemove));
+  };
+  const handleTagKeyDown = (e) => {
+    if (e.key === 'Enter' && tagInput && suggestions.length > 0) {
+      e.preventDefault();
+      addTag(suggestions[0]);
+    } else if (e.key === 'Backspace' && !tagInput && typeTags.length > 0) {
+      removeTag(typeTags[typeTags.length - 1]);
+    }
+  };
+
+  // Add effect to close suggestions on outside click
+  useEffect(() => {
+    if (!showSuggestions) return;
+    function handleClickOutside(event) {
+      if (
+        tagInputContainerRef.current &&
+        !tagInputContainerRef.current.contains(event.target)
+      ) {
+        setShowSuggestions(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showSuggestions]);
 
   if (loading) {
     return (
@@ -190,44 +299,50 @@ export default function SearchPage() {
       <Navbar />
       <main className="max-w-4xl mx-auto p-4">
         <h1 className="text-3xl font-semibold text-gray-800 mb-6">Find Your Perfect Fries</h1>
-        
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          {/* Filters Section */}
-          <div className="md:col-span-1 bg-white/65 backdrop-blur-sm p-4 rounded-xl border border-white/50">
-            <h2 className="text-lg font-medium text-gray-800 mb-4">Filters</h2>
-
+        {/* Filters Section - now at the top */}
+        <div className="bg-white/65 backdrop-blur-sm p-4 rounded-xl border border-white/50 mb-6">
+          <h2 className="text-lg font-medium text-gray-800 mb-4">Filters</h2>
+          <div className="flex flex-col gap-2">
             {renderRatingSelector('length', 'Length')}
             {renderRatingSelector('thickness', 'Thickness')}
             {renderRatingSelector('crispiness', 'Crispiness')}
             {renderRatingSelector('saltiness', 'Saltiness')}
             {renderRatingSelector('darkness', 'Darkness')}
+            {/* Fry type tags filter UI (moved below other filters, matches PostForm) */}
+            <TagTypeDropdown
+              allFryTypes={allFryTypes}
+              selectedTags={typeTags}
+              setSelectedTags={setTypeTags}
+              placeholder="Type of fries"
+              className="z-50 mt-2"
+            />
+            {/* End fry type tags filter UI */}
           </div>
-
-          {/* Results Section */}
-          <div className="md:col-span-3 space-y-4">
-            {filteredLocations.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-gray-600">No locations match your filters. Try adjusting your criteria.</p>
-              </div>
-            ) : (
-              filteredLocations.map((location) => (
-                <SearchResult
-                  key={location.id}
-                  location={location}
-                  selectedCategories={selectedCategories}
-                  createLocationSlug={createLocationSlug}
-                  images={locationImages[location.name] || []}
-                  expanded={expandedCard === location.id}
-                  onExpand={() => {
-                    setExpandedCard(expandedCard === location.id ? null : location.id);
-                    if (!locationImages[location.name]) {
-                      fetchLocationImages(location.name);
-                    }
-                  }}
-                />
-              ))
-            )}
-          </div>
+        </div>
+        {/* Results Section */}
+        <div className="space-y-4 z-0 relative">
+          {filteredLocations.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-600">No locations match your filters. Try adjusting your criteria.</p>
+            </div>
+          ) : (
+            filteredLocations.map((location) => (
+              <SearchResult
+                key={location.id}
+                location={location}
+                selectedCategories={selectedCategories}
+                createLocationSlug={createLocationSlug}
+                images={locationImages[location.name] || []}
+                expanded={expandedCard === location.id}
+                onExpand={() => {
+                  setExpandedCard(expandedCard === location.id ? null : location.id);
+                  if (!locationImages[location.name]) {
+                    fetchLocationImages(location.name);
+                  }
+                }}
+              />
+            ))
+          )}
         </div>
       </main>
     </>
