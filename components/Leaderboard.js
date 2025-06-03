@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { db } from '../lib/firebase';
 import { collection, query, where, orderBy, limit, getDocs, addDoc, deleteDoc, doc } from 'firebase/firestore';
-import Image from 'next/image';
+import ImageGallery from './ImageGallery';
 import Link from 'next/link';
 
 export default function Leaderboard() {
@@ -350,43 +350,11 @@ export default function Leaderboard() {
                 {fry.recentImages && fry.recentImages.length > 0 && (
                   <div className="mt-4">
                     <h4 className="text-sm font-medium text-gray-500 mb-3">Recent Uploads</h4>
-                    <div className="space-y-3">
-                      <div className="relative aspect-[4/3] rounded-lg overflow-hidden">
-                        <img
-                          src={fry.recentImages[selectedImageIndex[fry.id] || 0].imageUrl}
-                          alt="Recent fries from this location"
-                          className="w-full h-full object-cover"
-                        />
-                        <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/60 to-transparent">
-                          <span className="text-sm font-medium text-white">
-                            {fry.recentImages[selectedImageIndex[fry.id] || 0].username}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-5 gap-1.5">
-                        {fry.recentImages.map((img, idx) => (
-                          <button
-                            key={idx}
-                            onClick={e => {
-                              e.stopPropagation();
-                              setSelectedImageIndex(prev => ({
-                                ...prev,
-                                [fry.id]: idx
-                              }));
-                            }}
-                            className={`relative aspect-square rounded-lg overflow-hidden transition-opacity ${
-                              idx === (selectedImageIndex[fry.id] || 0) ? 'ring-2 ring-yellow-500' : 'hover:opacity-80'
-                            }`}
-                          >
-                            <img
-                              src={img.imageUrl}
-                              alt="Recent fries from this location"
-                              className="w-full h-full object-cover"
-                            />
-                          </button>
-                        ))}
-                      </div>
-                    </div>
+                    <ImageGallery
+                      images={fry.recentImages}
+                      selectedIndex={selectedImageIndex[fry.id] || 0}
+                      onSelect={idx => setSelectedImageIndex(prev => ({ ...prev, [fry.id]: idx }))}
+                    />
                   </div>
                 )}
                 <button

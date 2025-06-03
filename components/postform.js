@@ -42,6 +42,7 @@ export default function PostForm() {
   const router = useRouter();
   const { isLoaded: isGoogleMapsLoaded, error: googleMapsError } = useGoogleMaps();
   const { user } = useAuth();
+  const tagInputContainerRef = useRef(null);
 
   // Check for temporary image in localStorage on component mount
   useEffect(() => {
@@ -109,7 +110,6 @@ export default function PostForm() {
   const handleTagInputChange = (e) => {
     const value = e.target.value;
     setTagInput(value);
-    
     if (value) {
       const filtered = allFryTypes.filter(type => 
         type.label.toLowerCase().includes(value.toLowerCase()) &&
@@ -118,8 +118,10 @@ export default function PostForm() {
       setSuggestions(filtered);
       setShowSuggestions(true);
     } else {
-      setSuggestions([]);
-      setShowSuggestions(false);
+      // Show all available options if input is empty
+      const filtered = allFryTypes.filter(type => !formData.types.includes(type.value));
+      setSuggestions(filtered);
+      setShowSuggestions(true);
     }
   };
 
@@ -644,6 +646,23 @@ export default function PostForm() {
     );
   };
 
+  // Add effect to close suggestions on outside click
+  useEffect(() => {
+    if (!showSuggestions) return;
+    function handleClickOutside(event) {
+      if (
+        tagInputContainerRef.current &&
+        !tagInputContainerRef.current.contains(event.target)
+      ) {
+        setShowSuggestions(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showSuggestions]);
+
   return (
     <form onSubmit={handleSubmit} className="max-w-2xl mx-auto p-0 sm:p-6" noValidate>
       {error && (
@@ -742,77 +761,93 @@ export default function PostForm() {
             {LocationInput}
 
             <div className="relative">
-              <div className="relative bg-white/60 backdrop-blur-sm rounded-md border border-white/50 h-[60px]">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none z-10">
-                  <svg className="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                  </svg>
-                </div>
-                <div className="p-4 pl-12 h-full">
-                  <div className="flex flex-wrap gap-2 items-center h-full">
-                    {formData.types.map(type => {
-                      const typeInfo = allFryTypes.find(t => t.value === type);
-                      return (
-                        <span
-                          key={type}
-                          className="inline-flex items-center px-3 py-1 text-sm bg-white/60 backdrop-blur-sm text-gray-700 rounded-full border border-gray-400"
-                        >
-                          {typeInfo?.label}
-                          <button
-                            type="button"
-                            onClick={() => removeTag(type)}
-                            className="ml-1 text-gray-500 hover:text-gray-700"
+              <div ref={tagInputContainerRef}>
+                <div className="relative bg-white/60 backdrop-blur-sm rounded-md border border-white/50 h-[60px]">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none z-10">
+                    <svg className="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                    </svg>
+                  </div>
+                  <div className="p-4 pl-12 h-full">
+                    <div className="flex flex-wrap gap-2 items-center h-full">
+                      {formData.types.map(type => {
+                        const typeInfo = allFryTypes.find(t => t.value === type);
+                        return (
+                          <span
+                            key={type}
+                            className="inline-flex items-center px-3 py-1 text-sm bg-white/60 backdrop-blur-sm text-gray-700 rounded-full border border-gray-400"
                           >
-                            ×
-                          </button>
-                        </span>
-                      );
-                    })}
-                    <input
-                      key="tag-input"
-                      ref={tagInputRef}
-                      type="text"
-                      value={tagInput}
-                      onChange={handleTagInputChange}
-                      onKeyDown={handleKeyDown}
-                      onFocus={() => setShowSuggestions(true)}
-                      className="flex-1 min-w-[150px] outline-none text-base bg-transparent"
-                      placeholder={formData.types.length === 0 ? "Type of fries" : ""}
-                    />
+                            {typeInfo?.label}
+                            <button
+                              type="button"
+                              onClick={() => removeTag(type)}
+                              className="ml-1 text-gray-500 hover:text-gray-700"
+                            >
+                              ×
+                            </button>
+                          </span>
+                        );
+                      })}
+                      <input
+                        key="tag-input"
+                        ref={tagInputRef}
+                        type="text"
+                        value={tagInput}
+                        onChange={handleTagInputChange}
+                        onKeyDown={handleKeyDown}
+                        onFocus={() => {
+                          if (!tagInput) {
+                            const filtered = allFryTypes.filter(type => !formData.types.includes(type.value));
+                            setSuggestions(filtered);
+                          }
+                          setShowSuggestions(true);
+                        }}
+                        className="flex-1 min-w-[150px] outline-none text-base bg-transparent"
+                        placeholder={formData.types.length === 0 ? "Type of fries" : ""}
+                      />
+                    </div>
                   </div>
                 </div>
+                {showSuggestions && suggestions.length > 0 && (
+                  <div className="absolute z-20 w-full mt-1.5 bg-white/60 backdrop-blur-sm border border-white/50 rounded-md">
+                    {suggestions.map((type) => (
+                      <div
+                        key={type.value}
+                        onClick={() => addTag(type)}
+                        className="flex items-center px-4 py-2 hover:bg-white/50 cursor-pointer text-base border-b border-white/30 last:border-b-0"
+                      >
+                        <svg className="w-4 h-4 text-gray-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                        {type.label}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-              {showSuggestions && suggestions.length > 0 && (
-                <div className="absolute z-20 w-full mt-1.5 bg-white/60 backdrop-blur-sm border border-white/50 rounded-md">
-                  {suggestions.map((type) => (
-                    <div
-                      key={type.value}
-                      onClick={() => addTag(type)}
-                      className="flex items-center px-4 py-2 hover:bg-white/50 cursor-pointer text-base border-b border-white/30 last:border-b-0"
-                    >
-                      <svg className="w-4 h-4 text-gray-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                      </svg>
-                      {type.label}
-                    </div>
-                  ))}
-                </div>
-              )}
               <div className="mt-1.5">
                 <div className="flex flex-wrap gap-1.5">
-                  {allFryTypes.slice(0, 4).map((type) => (
-                    <button
-                      key={type.value}
-                      type="button"
-                      onClick={() => addTag(type)}
-                      className="inline-flex items-center px-3 py-1 text-sm bg-white/60 backdrop-blur-sm text-gray-700 rounded-full border border-gray-400"
-                    >
-                      <svg className="w-3 h-3 text-gray-600 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                      </svg>
-                      {type.label}
-                    </button>
-                  ))}
+                  {allFryTypes.slice(0, 4).map((type) => {
+                    const isSelected = formData.types.includes(type.value);
+                    return (
+                      <button
+                        key={type.value}
+                        type="button"
+                        onClick={() => !isSelected && addTag(type)}
+                        disabled={isSelected}
+                        className={`inline-flex items-center px-3 py-1 text-sm rounded-full border border-gray-400 backdrop-blur-sm
+                          ${isSelected
+                            ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                            : 'text-gray-700 hover:bg-gray-100'}
+                        `}
+                      >
+                        <svg className={`w-3 h-3 mr-1 ${isSelected ? 'text-gray-400' : 'text-gray-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                        {type.label}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>

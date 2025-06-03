@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import CategoryAveragesDisplay from './CategoryAveragesDisplay';
+import ImageGallery from './ImageGallery';
 
 export default function SearchResult({ location, selectedCategories, createLocationSlug, images, expanded, onExpand }) {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
@@ -64,34 +65,11 @@ export default function SearchResult({ location, selectedCategories, createLocat
           {/* Recent Images */}
           {images && images.length > 0 && (
             <div className="mt-4">
-              <div className="relative aspect-[4/3] rounded-lg overflow-hidden mb-2">
-                <img
-                  src={images[selectedImageIndex]}
-                  alt="Recent fries from this location"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="grid grid-cols-5 gap-1.5">
-                {images.slice(0, 5).map((image, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={e => {
-                      e.stopPropagation();
-                      setSelectedImageIndex(idx);
-                    }}
-                    className={`relative aspect-square rounded-lg overflow-hidden transition-opacity ${
-                      idx === selectedImageIndex ? 'ring-2 ring-yellow-500' : 'hover:opacity-80'
-                    }`}
-                  >
-                    <img
-                      src={image}
-                      alt="Recent fries from this location"
-                      className="w-full h-full object-cover"
-                    />
-                  </button>
-                ))}
-              </div>
+              <ImageGallery
+                images={images}
+                selectedIndex={selectedImageIndex}
+                onSelect={idx => setSelectedImageIndex(idx)}
+              />
             </div>
           )}
         </>
