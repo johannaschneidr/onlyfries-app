@@ -94,7 +94,7 @@ export default function Profile() {
         {error && <p className="text-red-500 mb-4">{error}</p>}
         {success && <p className="text-green-500 mb-4">{success}</p>}
         
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <div className="bg-white/65 backdrop-blur-sm rounded-xl border border-white/50 p-6 mb-6">
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">Username</label>
