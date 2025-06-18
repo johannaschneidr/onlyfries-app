@@ -3,6 +3,7 @@ import { db } from '../lib/firebase';
 import { collection, query, where, orderBy, limit, getDocs, addDoc, deleteDoc, doc, onSnapshot } from 'firebase/firestore';
 import ImageGallery from './ImageGallery';
 import Link from 'next/link';
+import { sortLocationsByCompositeScore, sortLocationsByTrendingScore } from '../lib/bayesianRanking';
 
 export default function Leaderboard() {
   const [topFries, setTopFries] = useState([]);
@@ -118,22 +119,27 @@ export default function Leaderboard() {
     try {
       console.log('Fetching best overall fries...');
       const locationsRef = collection(db, 'locations');
-      const q = query(
-        locationsRef,
-        orderBy('averageOverall', 'desc'),
-        orderBy('totalReviews', 'desc'),
-        limit(5)
-      );
-
+      
+      // Fetch all locations instead of using Firestore ordering
+      // We'll sort them client-side using the Bayesian algorithm
+      const q = query(locationsRef);
+      
       const querySnapshot = await getDocs(q);
       console.log('Best overall query snapshot:', querySnapshot);
       const locations = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       }));
-      console.log('Best overall locations:', locations);
+      
+      // Sort locations using Bayesian ranking algorithm
+      const sortedLocations = sortLocationsByCompositeScore(locations);
+      
+      // Take top 5
+      const topLocations = sortedLocations.slice(0, 5);
+      
+      console.log('Best overall locations (sorted by Bayesian ranking):', topLocations);
 
-      setTopFries(locations);
+      setTopFries(topLocations);
     } catch (error) {
       console.error('Error fetching best overall fries:', error);
     } finally {
@@ -144,17 +150,11 @@ export default function Leaderboard() {
   const fetchTrending = async () => {
     try {
       console.log('Fetching trending fries...');
-      const now = new Date();
-      const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-
+      
       const locationsRef = collection(db, 'locations');
-      const q = query(
-        locationsRef,
-        where('lastUpdated', '>=', oneWeekAgo.toISOString()),
-        orderBy('lastUpdated', 'desc'),
-        orderBy('averageOverall', 'desc'),
-        limit(5)
-      );
+      // Fetch all locations instead of filtering by lastUpdated
+      // The trending algorithm will handle time-based ranking
+      const q = query(locationsRef);
 
       const querySnapshot = await getDocs(q);
       console.log('Trending query snapshot:', querySnapshot);
@@ -162,9 +162,16 @@ export default function Leaderboard() {
         id: doc.id,
         ...doc.data()
       }));
-      console.log('Trending locations:', locations);
+      
+      // Sort locations using trending ranking algorithm with time decay
+      const sortedLocations = sortLocationsByTrendingScore(locations);
+      
+      // Take top 5
+      const topLocations = sortedLocations.slice(0, 5);
+      
+      console.log('Trending locations (sorted by trending score with time decay):', topLocations);
 
-      setTopFries(locations);
+      setTopFries(topLocations);
     } catch (error) {
       console.error('Error fetching trending fries:', error);
     } finally {
