@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { db } from '../lib/firebase';
-import { collection, query, where, orderBy, limit, getDocs, addDoc, deleteDoc, doc } from 'firebase/firestore';
+import { collection, query, where, orderBy, limit, getDocs, addDoc, deleteDoc, doc, onSnapshot } from 'firebase/firestore';
 import ImageGallery from './ImageGallery';
 import Link from 'next/link';
 
@@ -92,8 +92,9 @@ export default function Leaderboard() {
         limit(5)
       );
 
-      const querySnapshot = await getDocs(q);
-      const images = querySnapshot.docs.map(doc => ({
+      // Use onSnapshot instead of getDocs for real-time updates
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        const images = snapshot.docs.map(doc => ({
         id: doc.id,
         imageUrl: doc.data().imageUrl,
         createdAt: doc.data().createdAt,
@@ -104,6 +105,10 @@ export default function Leaderboard() {
         ...prev,
         [locationName]: images
       }));
+      });
+
+      // Store unsubscribe function to clean up later
+      return unsubscribe;
     } catch (error) {
       console.error('Error fetching location images:', error);
     }
@@ -216,24 +221,39 @@ export default function Leaderboard() {
     deleteTestLocations();
     
     setLoading(true);
+    let unsubscribeFunctions = [];
+
+    const setupData = async () => {
     switch (activeTab) {
       case 'best-overall':
-        fetchBestOverall();
+          await fetchBestOverall();
         break;
       case 'trending':
-        fetchTrending();
+          await fetchTrending();
         break;
       case 'most-reviewed':
-        fetchMostReviewed();
+          await fetchMostReviewed();
         break;
     }
+    };
+
+    setupData();
+
+    // Cleanup function
+    return () => {
+      unsubscribeFunctions.forEach(unsubscribe => unsubscribe());
+    };
   }, [activeTab]);
 
   useEffect(() => {
     if (expandedCard) {
       const location = topFries.find(fry => fry.id === expandedCard)?.locationName;
       if (location && !locationImages[location]) {
-        fetchLocationImages(location);
+        const unsubscribe = fetchLocationImages(location);
+        if (unsubscribe) {
+          // Store unsubscribe function
+          unsubscribeFunctions.push(unsubscribe);
+        }
         setSelectedImageIndex(prev => ({
           ...prev,
           [location]: 0

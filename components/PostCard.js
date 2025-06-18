@@ -7,7 +7,7 @@ import { collection, query, where, getDocs, addDoc, deleteDoc } from 'firebase/f
 import ReactionPicker from './ReactionPicker';
 import CategoryDisplay from './CategoryDisplay';
 
-export default function PostCard({ post }) {
+export default function PostCard({ post, openLoginModal }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showAllGifs, setShowAllGifs] = useState(false);
   const [reactions, setReactions] = useState([]);
@@ -100,6 +100,9 @@ export default function PostCard({ post }) {
 
   const handleNewReaction = (newReaction) => {
     setReactions(prev => [newReaction, ...prev]);
+    if (newReaction.type === 'gif') {
+      setShowReactions(true);
+    }
   };
 
   const renderStars = (rating) => {
@@ -245,11 +248,13 @@ export default function PostCard({ post }) {
           </div>
         )}
 
-        <div className="mt-4">
+        <div className="mt-4 flex items-center justify-between">
           <ReactionPicker
             postId={post.id}
             onReactionAdded={handleNewReaction}
+            openLoginModal={openLoginModal}
           />
+        </div>
 
           {reactions.length > 0 && (
             <div className="mt-4">
@@ -308,7 +313,6 @@ export default function PostCard({ post }) {
               )}
             </div>
           )}
-        </div>
       </div>
     </div>
   );

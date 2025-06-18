@@ -22,6 +22,7 @@ export default function PostForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [formSubmitted, setFormSubmitted] = useState(false);
+  const [showAnonymousWarning, setShowAnonymousWarning] = useState(false);
   const [formData, setFormData] = useState({
     locationName: '',
     menuName: '',
@@ -441,6 +442,15 @@ export default function PostForm() {
       return;
     }
 
+    if (!user) {
+      setShowAnonymousWarning(true);
+      return;
+    }
+
+    await submitPost();
+  };
+
+  const submitPost = async () => {
     setLoading(true);
     setError('');
 
@@ -451,6 +461,7 @@ export default function PostForm() {
         imageUrl,
         createdAt: new Date().toISOString(),
         username: user?.displayName || 'Anonymous',
+        userId: user?.uid || 'anonymous'
       };
 
       console.log('Submitting post data:', postData);
@@ -663,11 +674,72 @@ export default function PostForm() {
     };
   }, [showSuggestions]);
 
+  // Save form data to localStorage before redirecting to login
+  const handleLoginRedirect = () => {
+    // Save the current form state
+    localStorage.setItem('pendingPost', JSON.stringify({
+      image: preview,
+      formData,
+      currentPage
+    }));
+    // Redirect to login page
+    router.push('/login?redirect=new');
+  };
+
+  // Check for pending post data on component mount
+  useEffect(() => {
+    const pendingPost = localStorage.getItem('pendingPost');
+    if (pendingPost && user) {
+      const { image: savedImage, formData: savedFormData, currentPage: savedPage } = JSON.parse(pendingPost);
+      setPreview(savedImage);
+      setFormData(savedFormData);
+      setCurrentPage(savedPage);
+      // Convert data URL to File object
+      fetch(savedImage)
+        .then(res => res.blob())
+        .then(blob => {
+          const file = new File([blob], 'temp-image.jpg', { type: 'image/jpeg' });
+          setImage(file);
+        });
+      // Clear the pending post data
+      localStorage.removeItem('pendingPost');
+    }
+  }, [user]);
+
   return (
     <form onSubmit={handleSubmit} className="max-w-2xl mx-auto p-0 sm:p-6" noValidate>
       {error && (
         <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-md border border-white/50">
           {error}
+        </div>
+      )}
+
+      {/* Anonymous Post Warning Modal */}
+      {showAnonymousWarning && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-xl">
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">Posting Anonymously</h3>
+            <p className="text-gray-600 mb-6">
+              You are not logged in to an account. This post will be submitted anonymously and can't be reclaimed by you if you proceed. If you want to post this under an account, please log in or sign up.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={handleLoginRedirect}
+                className="px-4 py-2 text-sm font-medium text-white bg-yellow-500 hover:bg-yellow-600 rounded-lg transition-colors"
+              >
+                Log in / Sign up
+              </button>
+              <button
+                onClick={() => {
+                  setShowAnonymousWarning(false);
+                  submitPost();
+                }}
+                className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              >
+                Proceed anonymously
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
