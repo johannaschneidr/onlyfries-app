@@ -6,9 +6,11 @@ import Leaderboard from '../components/Leaderboard';
 import Header from '../components/Header';
 import { db } from '../lib/firebase';
 import { collection, query, orderBy, onSnapshot, getDocs } from 'firebase/firestore';
+import LoginModal from '../components/LoginModal';
 
 export default function Home() {
   const [posts, setPosts] = useState([]);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   /* Firestore TEST
   const testFirestore = async () => {
@@ -48,6 +50,7 @@ export default function Home() {
 
   return (
     <>
+      <LoginModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} />
       <Navbar />
       <Header />
       <main className="max-w-4xl mx-auto p-4">
@@ -58,7 +61,7 @@ export default function Home() {
         <h1 className="text-2xl font-bold mb-6 text-gray-800">Latest Fries Posts</h1>
         <div className="grid gap-6">
           {posts.map(post => (
-            <PostCard key={post.id} post={post} />
+            <PostCard key={post.id} post={post} openLoginModal={() => setShowLoginModal(true)} />
           ))}
         </div>
       </main>

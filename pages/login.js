@@ -9,6 +9,7 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const router = useRouter();
+  const { redirect } = router.query;
 
   const checkEmailExists = async (email) => {
     try {
@@ -49,7 +50,8 @@ export default function Login() {
         pathname: '/auth/verify',
         query: { 
           email, 
-          isNewUser: !emailExists 
+          isNewUser: !emailExists,
+          redirect: redirect || undefined
         }
       });
     } catch (error) {
@@ -84,7 +86,12 @@ export default function Login() {
         });
       }
       
-      router.push('/profile');
+      // Redirect based on the redirect parameter
+      if (redirect === 'new') {
+        router.push('/new');
+      } else {
+        router.push('/');
+      }
     } catch (error) {
       setError(error.message);
     }

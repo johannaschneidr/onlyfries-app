@@ -13,7 +13,7 @@ export default function Verify() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const router = useRouter();
-  const { email, isNewUser: isNewUserParam } = router.query;
+  const { email, isNewUser: isNewUserParam, redirect } = router.query;
   const [isNewUser, setIsNewUser] = useState(isNewUserParam === 'true');
 
   useEffect(() => {
@@ -79,7 +79,12 @@ export default function Verify() {
         await setDoc(doc(db, 'usernames', username), {
           userId: userCredential.user.uid
         });
-        router.push('/profile');
+        // Redirect based on the redirect parameter
+        if (redirect === 'new') {
+          router.push('/new');
+        } else {
+          router.push('/');
+        }
       } catch (error) {
         setError(error.message);
       }
@@ -87,7 +92,12 @@ export default function Verify() {
       // Login flow
       try {
         await signInWithEmailAndPassword(auth, email, password);
-        router.push('/profile');
+        // Redirect based on the redirect parameter
+        if (redirect === 'new') {
+          router.push('/new');
+        } else {
+          router.push('/');
+        }
       } catch (error) {
         setError(error.message);
       }
