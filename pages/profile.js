@@ -5,6 +5,7 @@ import { signOut, updateProfile } from 'firebase/auth';
 import { doc, setDoc, getDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 import Navbar from '../components/navbar';
+import MessageAlert from '../components/MessageAlert';
 
 export default function Profile() {
   const { user } = useAuth();
@@ -91,8 +92,8 @@ export default function Profile() {
       <Navbar />
       <div className="max-w-md mx-auto p-4">
         <h1 className="text-2xl font-bold mb-4">Profile</h1>
-        {error && <p className="text-red-500 mb-4">{error}</p>}
-        {success && <p className="text-green-500 mb-4">{success}</p>}
+        <MessageAlert type="error" message={error} className="mb-4" />
+        <MessageAlert type="success" message={success} className="mb-4" />
         
         <div className="bg-white/65 backdrop-blur-sm rounded-xl border border-white/50 p-6 mb-6">
           <div className="space-y-4">

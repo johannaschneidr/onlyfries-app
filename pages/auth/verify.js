@@ -4,6 +4,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfi
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../../lib/firebase';
 import Navbar from '../../components/navbar';
+import MessageAlert from '../../components/MessageAlert';
 
 export default function Verify() {
   const [password, setPassword] = useState('');
@@ -91,6 +92,10 @@ export default function Verify() {
     } else {
       // Login flow
       try {
+        if (!password) {
+          setError('Please enter your password');
+          return;
+        }
         await signInWithEmailAndPassword(auth, email, password);
         // Redirect based on the redirect parameter
         if (redirect === 'new') {
@@ -110,7 +115,7 @@ export default function Verify() {
     <>
       <Navbar />
       <div className="max-w-md mx-auto p-4">
-        {error && <p className="text-red-500 mb-4">{error}</p>}
+        <MessageAlert type="error" message={error} className="mb-4" />
         <form onSubmit={handleAuth} className="space-y-6" noValidate>
           {isNewUser ? (
             <>
@@ -213,7 +218,7 @@ export default function Verify() {
           ) : (
             <>
               <div>
-                <label htmlFor="current-password" className="block text-base font-medium text-gray-700 mb-2">
+                <label htmlFor="current-password" className="block text-lg font-medium text-gray-700 mb-2">
                   Enter your password
                 </label>
                 <div className="relative">
@@ -244,7 +249,7 @@ export default function Verify() {
                     )}
                   </button>
                 </div>
-                <div className="mt-2 text-right">
+                <div className="mt-2 text-left">
                   <button
                     type="button"
                     onClick={() => router.push({
