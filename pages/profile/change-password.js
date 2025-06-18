@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import { useAuth } from '../../contexts/AuthContext';
 import { updatePassword, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
 import Navbar from '../../components/navbar';
+import MessageAlert from '../../components/MessageAlert';
 
 export default function ChangePassword() {
   const { user } = useAuth();
@@ -70,8 +71,8 @@ export default function ChangePassword() {
       <div className="max-w-md mx-auto p-4">
         <h1 className="text-2xl font-bold mb-6">Change Password</h1>
         
-        {error && <p className="text-red-500 mb-4">{error}</p>}
-        {success && <p className="text-green-500 mb-4">{success}</p>}
+        <MessageAlert type="error" message={error} className="mb-4" />
+        <MessageAlert type="success" message={success} className="mb-4" />
 
         <div className="bg-white rounded-lg shadow p-6">
           <form onSubmit={handlePasswordUpdate} className="space-y-4">

@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '../../lib/firebase';
 import Navbar from '../../components/navbar';
+import MessageAlert from '../../components/MessageAlert';
 
 export default function ResetPassword() {
   const router = useRouter();
@@ -44,8 +45,8 @@ export default function ResetPassword() {
       <div className="max-w-md mx-auto p-4">
         <h1 className="text-2xl font-bold mb-6">Reset Password</h1>
         
-        {error && <p className="text-red-500 mb-4">{error}</p>}
-        {success && <p className="text-green-500 mb-4">{success}</p>}
+        <MessageAlert type="error" message={error} className="mb-4" />
+        <MessageAlert type="success" message={success} className="mb-4" />
 
         <div className="bg-white rounded-lg shadow p-6">
           <form onSubmit={handleResetPassword} className="space-y-4">

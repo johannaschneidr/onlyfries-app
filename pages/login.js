@@ -4,6 +4,7 @@ import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, create
 import { doc, setDoc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 import Navbar from '../components/navbar';
+import MessageAlert from '../components/MessageAlert';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -101,7 +102,8 @@ export default function Login() {
     <>
       <Navbar />
       <div className="max-w-md mx-auto p-4">
-        {error && <p className="text-red-500 mb-4">{error}</p>}
+        <h1 className="text-2xl font-bold mb-6">Log in or sign up</h1>
+        <MessageAlert type="error" message={error} className="mb-4" />
         <form onSubmit={handleEmailSubmit} className="space-y-6" noValidate>
           <div className="relative">
             <input
@@ -109,7 +111,7 @@ export default function Login() {
               id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 block w-full rounded-full border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 text-base h-12 px-4 pr-12"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 text-base h-12 px-4 pr-12"
               placeholder="Enter your email"
             />
             {email && (
@@ -136,7 +138,17 @@ export default function Login() {
           </div>
         </form>
 
-        <div className="mt-6">
+        <div className="relative my-8">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full flex items-center">
+              <div className="flex-1 border-t border-gray-300" />
+              <span className="px-2 text-gray-500">or</span>
+              <div className="flex-1 border-t border-gray-300" />
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-16">
           <button
             onClick={handleGoogleAuth}
             className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-md shadow-sm text-base font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"

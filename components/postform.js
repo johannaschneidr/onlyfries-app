@@ -5,6 +5,7 @@ import { collection, addDoc, query, where, getDocs, updateDoc, arrayUnion } from
 import { useRouter } from 'next/router';
 import { useGoogleMaps } from '../hooks/useGoogleMaps';
 import { useAuth } from '../contexts/AuthContext';
+import MessageAlert from './MessageAlert';
 
 export default function PostForm() {
   // Add ratingDescriptors at the top level
@@ -708,11 +709,7 @@ export default function PostForm() {
 
   return (
     <form onSubmit={handleSubmit} className="max-w-2xl mx-auto p-0 sm:p-6" noValidate>
-      {error && (
-        <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-md border border-white/50">
-          {error}
-        </div>
-      )}
+      <MessageAlert type="error" message={error} className="mb-4" />
 
       {/* Anonymous Post Warning Modal */}
       {showAnonymousWarning && (

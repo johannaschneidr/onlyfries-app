@@ -5,6 +5,7 @@ import { EmailAuthProvider, reauthenticateWithCredential, deleteUser } from 'fir
 import { doc, deleteDoc } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import Navbar from '../../components/navbar';
+import MessageAlert from '../../components/MessageAlert';
 
 export default function DeleteAccount() {
   const { user } = useAuth();
@@ -75,9 +76,9 @@ export default function DeleteAccount() {
           </div>
         </div>
 
-        {error && <p className="text-red-500 mb-4">{error}</p>}
+        <MessageAlert type="error" message={error} className="mb-4" />
 
-        <form onSubmit={handleDeleteAccount} className="space-y-6">
+        <form onSubmit={handleDeleteAccount} className="space-y-4">
           <div>
             <label htmlFor="deleteAccountPassword" className="block text-sm font-medium text-gray-700">
               Enter your password to confirm

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { db } from '../lib/firebase';
 import { collection, addDoc, deleteDoc, query, where, getDocs } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
+import MessageAlert from './MessageAlert';
 
 export default function ReactionPicker({ postId, onReactionAdded, hideGifButton = false, openLoginModal }) {
   const [showGifSearch, setShowGifSearch] = useState(false);
@@ -193,7 +194,7 @@ export default function ReactionPicker({ postId, onReactionAdded, hideGifButton 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="React with a GIF..."
-            className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            className="w-full px-4 py-2.5 text-base border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-500"
           />
           <div className="absolute right-3 top-1/2 -translate-y-1/2 inline-flex items-center">
             {isLoading ? (
@@ -219,9 +220,7 @@ export default function ReactionPicker({ postId, onReactionAdded, hideGifButton 
       )}
 
       {error && (
-        <div className="text-red-500 text-sm text-center">
-          {error}
-        </div>
+        <MessageAlert type="error" message={error} className="text-center" />
       )}
 
       {(searchQuery || gifs.length > 0) && (
