@@ -98,11 +98,14 @@ export default function MyReactions({ postId, onReactionAdded, hideGifButton = f
             disabled={isPostAuthor}
             className={`flex items-center gap-1 px-2 py-1 rounded-full border transition-colors ${
               hasVoted 
-                ? 'bg-yellow-50 border-yellow-200 text-yellow-600' 
-                : isPostAuthor
-                  ? 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
-                  : 'bg-white/60 hover:bg-white/80 border-gray-200'
+                ? '' 
+                : 'bg-white/60 hover:bg-white/80 border-gray-200'
             }`}
+            style={hasVoted ? { 
+              backgroundColor: 'var(--yellow-custom)', 
+              borderColor: 'var(--yellow-custom)', 
+              color: '#374151' 
+            } : {}}
           >
             <span className="text-base">🔥</span>
             {fireCount > 0 && (

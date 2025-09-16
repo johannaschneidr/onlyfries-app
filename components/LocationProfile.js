@@ -31,7 +31,8 @@ export default function LocationProfile({ locationData }) {
     return Array(5).fill(0).map((_, index) => (
       <svg
         key={index}
-        className={`w-8 h-8 ${index < rating ? 'text-yellow-500' : 'text-gray-300'}`}
+        className={`w-8 h-8 ${index < rating ? '' : 'text-gray-300'}`}
+        style={index < rating ? { color: 'var(--yellow-custom)' } : {}}
         fill="currentColor"
         viewBox="0 0 20 20"
       >
@@ -98,9 +99,10 @@ export default function LocationProfile({ locationData }) {
                 key={num}
                 className={`w-full h-6 rounded-md flex items-center justify-center text-xs font-medium transition-colors
                   ${value === num 
-                    ? 'bg-yellow-500 text-white' 
+                    ? 'text-white' 
                     : 'bg-white text-gray-700'
                   }`}
+                style={value === num ? { backgroundColor: 'var(--yellow-custom)' } : {}}
               />
             ))}
           </div>
@@ -132,7 +134,7 @@ export default function LocationProfile({ locationData }) {
             </a>
           </div>
           <div className="flex items-center">
-            <span className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-yellow-500 text-white text-2xl font-semibold">
+            <span className="inline-flex items-center justify-center w-12 h-12 rounded-full text-white text-2xl font-semibold" style={{ backgroundColor: 'var(--yellow-custom)' }}>
               {averageOverall ? averageOverall.toFixed(1) : 'N/A'}
             </span>
           </div>

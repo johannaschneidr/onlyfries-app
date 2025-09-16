@@ -91,14 +91,14 @@ export default function Profile() {
     <>
       <Navbar />
       <div className="max-w-md mx-auto p-4">
-        <h1 className="text-2xl font-bold mb-4">Profile</h1>
+        <h1 className="text-2xl font-bold mb-4 font-rouge-script" style={{ color: 'var(--yellow-custom)' }}>Profile</h1>
         <MessageAlert type="error" message={error} className="mb-4" />
         <MessageAlert type="success" message={success} className="mb-4" />
         
         <div className="bg-white/65 backdrop-blur-sm rounded-xl border border-white/50 p-6 mb-6">
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700">Username</label>
+              <label className="block text-sm font-medium text-gray-700 font-baloo2">Username</label>
               {isEditingUsername ? (
                 <form onSubmit={handleUsernameUpdate} className="mt-1 space-y-2">
                   <div className="flex rounded-md shadow-sm">
@@ -106,7 +106,9 @@ export default function Profile() {
                       type="text"
                       value={username}
                       onChange={(e) => setUsername(e.target.value.toLowerCase())}
-                      className="flex-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 text-base h-12 px-4"
+                      className="flex-1 block w-full rounded-md border-gray-300 shadow-sm text-base h-12 px-4 font-baloo2"
+                      onFocus={(e) => e.target.style.borderColor = 'var(--yellow-custom)'}
+                      onBlur={(e) => e.target.style.borderColor = '#D1D5DB'}
                       minLength={3}
                       maxLength={20}
                       pattern="[a-z0-9]+"
@@ -114,7 +116,12 @@ export default function Profile() {
                     />
                     <button
                       type="submit"
-                      className="ml-3 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-yellow-500 hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
+                      className="mt-4 w-full text-white py-3 px-4 rounded-md shadow-sm text-sm font-medium rounded-md shadow-sm text-white focus:outline-none focus:ring-2 focus:ring-offset-2 font-baloo2"
+                      style={{ backgroundColor: 'var(--yellow-custom)' }}
+                      onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--yellow-custom)'}
+                      onMouseLeave={(e) => e.target.style.backgroundColor = 'var(--yellow-custom)'}
+                      onFocus={(e) => e.target.style.boxShadow = '0 0 0 2px var(--yellow-custom)'}
+                      onBlur={(e) => e.target.style.boxShadow = ''}
                     >
                       Save
                     </button>
@@ -125,21 +132,23 @@ export default function Profile() {
                         setUsername(user.displayName || '');
                         setError('');
                       }}
-                      className="ml-2 inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
+                      className="ml-2 inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 font-baloo2"
                     >
                       Cancel
                     </button>
                   </div>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-gray-500 font-baloo2">
                     Username must be 3-20 characters long and can only contain lowercase letters and numbers
                   </p>
                 </form>
               ) : (
                 <div className="mt-1 flex items-center">
-                  <p className="text-lg">{user.displayName}</p>
+                  <p className="text-lg font-baloo2">{user.displayName}</p>
                   <button
                     onClick={() => setIsEditingUsername(true)}
-                    className="ml-2 p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
+                    className="ml-2 p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2"
+                    onFocus={(e) => e.target.style.boxShadow = '0 0 0 2px var(--yellow-custom)'}
+                    onBlur={(e) => e.target.style.boxShadow = ''}
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -161,19 +170,21 @@ export default function Profile() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">Email</label>
+              <label className="block text-sm font-medium text-gray-700 font-baloo2">Email</label>
               <div className="mt-1">
-                <p className="text-lg">{user.email}</p>
+                <p className="text-lg font-baloo2">{user.email}</p>
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">Password</label>
+              <label className="block text-sm font-medium text-gray-700 font-baloo2">Password</label>
               <div className="mt-1 flex items-center justify-between">
-                <p className="text-lg">••••••••</p>
+                <p className="text-lg font-baloo2">••••••••</p>
                 <button
                   onClick={() => router.push('/profile/change-password')}
-                  className="p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
+                  className="p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2"
+                  onFocus={(e) => e.target.style.boxShadow = '0 0 0 2px var(--yellow-custom)'}
+                  onBlur={(e) => e.target.style.boxShadow = ''}
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -198,14 +209,14 @@ export default function Profile() {
         <div className="space-y-4">
           <button
             onClick={handleLogout}
-            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-500 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-500 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 font-baloo2"
           >
             Log Out
           </button>
 
           <button
             onClick={() => router.push('/profile/delete-account')}
-            className="w-full flex justify-center py-2 px-4 border border-red-600 rounded-md shadow-sm text-sm font-medium text-red-600 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+            className="w-full flex justify-center py-2 px-4 border border-red-600 rounded-md shadow-sm text-sm font-medium text-red-600 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 font-baloo2"
           >
             Delete Account
           </button>

@@ -175,7 +175,7 @@ export default function SearchPage() {
   const renderRatingSelector = (category, label) => (
     <div className="mb-4">
       <div className="flex items-center h-full gap-2">
-        <span className="text-sm text-gray-500 w-20">{label}</span>
+        <span className="text-sm text-gray-500 w-20 font-baloo2">{label}</span>
         <div className="flex gap-1 flex-1">
           {[1, 2, 3, 4, 5].map((num) => (
             <button
@@ -183,16 +183,17 @@ export default function SearchPage() {
               onClick={() => handleFilterChange(category, num)}
               className={`w-full h-8 rounded-md flex items-center justify-center text-xs font-medium transition-colors
                 ${filters[category] === num 
-                  ? 'bg-yellow-500 text-white' 
+                  ? 'text-white' 
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
+              style={filters[category] === num ? { backgroundColor: 'var(--yellow-custom)' } : {}}
               aria-label={`Set ${label} to ${num}`}
             >
               {/* No number shown */}
             </button>
           ))}
         </div>
-        <span className="text-sm font-medium text-gray-700 w-20 text-right">
+        <span className="text-sm font-medium text-gray-700 w-20 text-right font-baloo2">
           {filters[category] > 0 ? ratingDescriptors[category][filters[category]] : 'Any'}
         </span>
       </div>
@@ -298,10 +299,10 @@ export default function SearchPage() {
     <>
       <Navbar />
       <main className="max-w-4xl mx-auto p-4">
-        <h1 className="text-3xl font-semibold text-gray-800 mb-6">Find Your Perfect Fries</h1>
+        <h1 className="text-3xl font-semibold mb-6 font-rouge-script" style={{ color: 'var(--yellow-custom)' }}>Find Your Perfect Fries</h1>
         {/* Filters Section - now at the top */}
         <div className="bg-white/65 backdrop-blur-sm p-4 rounded-xl border border-white/50 mb-6">
-          <h2 className="text-lg font-medium text-gray-800 mb-4">Filters</h2>
+          <h2 className="text-lg font-medium text-gray-800 mb-4 font-baloo2">Filters</h2>
           <div className="flex flex-col gap-2">
             {renderRatingSelector('length', 'Length')}
             {renderRatingSelector('thickness', 'Thickness')}
@@ -323,7 +324,7 @@ export default function SearchPage() {
         <div className="space-y-4 z-0 relative">
           {filteredLocations.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-gray-600">No locations match your filters. Try adjusting your criteria.</p>
+              <p className="text-gray-600 font-baloo2">No locations match your filters. Try adjusting your criteria.</p>
             </div>
           ) : (
             filteredLocations.map((location) => (

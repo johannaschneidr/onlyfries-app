@@ -4,6 +4,7 @@ import { collection, query, where, orderBy, limit, getDocs, addDoc, deleteDoc, d
 import ImageGallery from './ImageGallery';
 import Link from 'next/link';
 import { sortLocationsByCompositeScore, sortLocationsByTrendingScore } from '../lib/bayesianRanking';
+import CategoryDisplay from './CategoryDisplay';
 
 export default function Leaderboard() {
   const [topFries, setTopFries] = useState([]);
@@ -12,76 +13,6 @@ export default function Leaderboard() {
   const [locationImages, setLocationImages] = useState({});
   const [selectedImageIndex, setSelectedImageIndex] = useState({});
   const [activeTab, setActiveTab] = useState('best-overall');
-
-  const ratingDescriptors = {
-    length: {
-      1: "Tiny",
-      2: "Shorty",
-      3: "Regular",
-      4: "Long Boi",
-      5: "Giraffe"
-    },
-    thickness: {
-      1: "Paper",
-      2: "Slim",
-      3: "Standard",
-      4: "Thicc",
-      5: "Chonky"
-    },
-    crispiness: {
-      1: "Mushy",
-      2: "Soft",
-      3: "Crisp",
-      4: "Crunchy",
-      5: "Crackling"
-    },
-    crunchiness: {
-      1: "Soggy",
-      2: "Tender",
-      3: "Firm",
-      4: "Crispy",
-      5: "Crunchy"
-    },
-    saltiness: {
-      1: "Bland",
-      2: "Mild",
-      3: "Seasoned",
-      4: "Salty",
-      5: "Ocean"
-    },
-    darkness: {
-      1: "Pale",
-      2: "Light",
-      3: "Golden",
-      4: "Toasted",
-      5: "Burnt"
-    }
-  };
-
-  const renderRatingBar = (label, value, descriptors) => {
-    if (!value) return null;
-    
-    return (
-      <div className="flex items-center h-full gap-2">
-        <span className="text-sm text-gray-500 w-20">{label}</span>
-        <div className="flex gap-1 flex-1">
-          {[1, 2, 3, 4, 5].map((num) => (
-            <div
-              key={num}
-              className={`w-full h-6 rounded-md flex items-center justify-center text-xs font-medium transition-colors
-                ${value === num 
-                  ? 'bg-yellow-500 text-white' 
-                  : 'bg-gray-100 text-gray-700'
-                }`}
-            />
-          ))}
-        </div>
-        <span className="text-sm font-medium text-gray-700 w-20 text-right">
-          {descriptors[value]}
-        </span>
-      </div>
-    );
-  };
 
   const fetchLocationImages = async (locationName) => {
     try {
@@ -271,56 +202,110 @@ export default function Leaderboard() {
 
   if (loading && topFries.length === 0) {
     return (
-      <div className="bg-white/60 backdrop-blur-sm rounded-xl p-6">
-        <h2 className="text-xl font-semibold mb-4">Loading...</h2>
+      <div className="bg-white rounded-xl p-6" style={{ borderWidth: '3px', borderStyle: 'solid', borderColor: 'black' }}>
+        <h2 className="text-xl font-semibold mb-4 font-baloo2">Loading...</h2>
       </div>
     );
   }
 
   return (
-    <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4">
-      <div className="flex gap-4 mb-4">
+    <div>
+      <div className="flex">
         <button
           onClick={() => setActiveTab('best-overall')}
-          className={`text-base font-medium text-gray-700 whitespace-nowrap ${
-            activeTab === 'best-overall' ? 'text-yellow-500' : 'hover:text-gray-900'
+          className={`flex-1 text-base font-medium whitespace-nowrap px-4 py-2 font-baloo2 ${
+            activeTab === 'best-overall' ? 'text-gray-800' : 'text-black'
           }`}
+          style={{ 
+            backgroundColor: activeTab === 'best-overall' ? 'white' : 'var(--light-blue-custom)',
+            border: '3px solid black',
+            borderBottom: 'none',
+            marginBottom: '0px',
+            borderTopLeftRadius: '12px',
+            borderTopRightRadius: '12px',
+            cursor: 'pointer',
+            outline: 'none',
+            boxSizing: 'border-box',
+            height: '48px'
+          }}
+          onFocus={(e) => e.target.style.outline = 'none'}
         >
           Best Overall
         </button>
         <button
           onClick={() => setActiveTab('trending')}
-          className={`text-base font-medium text-gray-700 whitespace-nowrap ${
-            activeTab === 'trending' ? 'text-yellow-500' : 'hover:text-gray-900'
+          className={`flex-1 text-base font-medium whitespace-nowrap px-4 py-2 font-baloo2 ${
+            activeTab === 'trending' ? 'text-gray-800' : 'text-black'
           }`}
+          style={{ 
+            backgroundColor: activeTab === 'trending' ? 'white' : 'var(--light-blue-custom)',
+            border: '3px solid black',
+            borderBottom: 'none',
+            marginBottom: '0px',
+            marginLeft: '-3px',
+            borderTopLeftRadius: '12px',
+            borderTopRightRadius: '12px',
+            cursor: 'pointer',
+            outline: 'none',
+            boxSizing: 'border-box',
+            height: '48px'
+          }}
+          onFocus={(e) => e.target.style.outline = 'none'}
         >
           Trending
         </button>
         <button
           onClick={() => setActiveTab('most-reviewed')}
-          className={`text-base font-medium text-gray-700 whitespace-nowrap ${
-            activeTab === 'most-reviewed' ? 'text-yellow-500' : 'hover:text-gray-900'
+          className={`flex-1 text-base font-medium whitespace-nowrap px-4 py-2 font-baloo2 ${
+            activeTab === 'most-reviewed' ? 'text-gray-800' : 'text-black'
           }`}
+          style={{ 
+            backgroundColor: activeTab === 'most-reviewed' ? 'white' : 'var(--light-blue-custom)',
+            border: '3px solid black',
+            borderBottom: 'none',
+            marginBottom: '0px',
+            marginLeft: '-3px',
+            borderTopLeftRadius: '12px',
+            borderTopRightRadius: '12px',
+            cursor: 'pointer',
+            outline: 'none',
+            boxSizing: 'border-box',
+            height: '48px'
+          }}
+          onFocus={(e) => e.target.style.outline = 'none'}
         >
           Most Reviews
         </button>
       </div>
-      <div className="space-y-1">
+      <div 
+        className="bg-white rounded-b-xl" 
+        style={{ 
+          borderWidth: '3px', 
+          borderStyle: 'solid', 
+          borderColor: 'black',
+          borderTop: 'none'
+        }}
+      >
+      <div>
         {topFries.map((fry, index) => (
           <div 
             key={fry.id} 
-            className="flex flex-col gap-2 py-2 border-b border-gray-200 last:border-b-0"
+            className={`flex flex-col gap-2 px-4 pt-3 pb-2 ${index < topFries.length - 1 ? 'border-b' : ''}`}
+            style={{
+              ...(index < topFries.length - 1 ? { borderBottomColor: 'black', borderBottomWidth: '3px' } : {}),
+              ...(index === 0 ? { borderTopColor: 'black', borderTopWidth: '3px' } : {})
+            }}
           >
             <div 
-              className="flex items-start gap-3 cursor-pointer"
+              className="flex items-start gap-1 cursor-pointer"
               onClick={() => setExpandedCard(expandedCard === fry.id ? null : fry.id)}
             >
               <div className="flex-1">
-                <div className="flex flex-col gap-1">
-                  <h3 className="font-medium text-base">
+                <div className="flex flex-col gap-0">
+                  <h3 className="font-medium text-2xl font-baloo2">
                     {fry.name.split(',')[0]}
                   </h3>
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-gray-500 font-baloo2 -mt-1">
                     {fry.totalReviews} review{fry.totalReviews !== 1 ? 's' : ''}
                   </span>
                 </div>
@@ -328,32 +313,36 @@ export default function Leaderboard() {
                   <div className="flex items-center gap-4 mt-4">
                     <Link
                       href={`/location/${fry.name.split(',')[0].trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}`}
-                      className="flex items-center gap-1 text-gray-500 hover:text-yellow-500 transition-colors"
+                      className="flex items-center gap-1 text-gray-500 transition-colors"
+                      onMouseEnter={(e) => e.target.style.color = 'var(--yellow-custom)'}
+                      onMouseLeave={(e) => e.target.style.color = '#6B7280'}
                       onClick={e => e.stopPropagation()}
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 21c-4.418 0-8-4.03-8-9a8 8 0 1116 0c0 4.97-3.582 9-8 9zm0-11a2 2 0 100 4 2 2 0 000-4z" />
                       </svg>
-                      <span className="text-sm">Full profile</span>
+                      <span className="text-sm font-baloo2">Full profile</span>
                     </Link>
                     <a
                       href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fry.name)}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-1 text-gray-500 hover:text-yellow-500 transition-colors"
+                      className="flex items-center gap-1 text-gray-500 transition-colors"
+                      onMouseEnter={(e) => e.target.style.color = 'var(--yellow-custom)'}
+                      onMouseLeave={(e) => e.target.style.color = '#6B7280'}
                       onClick={(e) => e.stopPropagation()}
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" />
                       </svg>
-                      <span className="text-sm">Open in Google Maps</span>
+                      <span className="text-sm font-baloo2">Open in Google Maps</span>
                     </a>
                   </div>
                 )}
               </div>
               <div className="flex items-center gap-2">
                 <div className="flex flex-col items-end">
-                  <span className="w-10 h-10 flex items-center justify-center text-lg font-semibold bg-yellow-500 text-white rounded-full p-2">
+                  <span className="w-10 h-10 flex items-center justify-center text-lg font-semibold text-black rounded-full p-2 font-baloo2" style={{ backgroundColor: 'var(--yellow-custom)' }}>
                     {fry.averageOverall.toFixed(1)}
                   </span>
                 </div>
@@ -364,14 +353,16 @@ export default function Leaderboard() {
                 <div className="space-y-3 mt-2">
                   {fry.averageLength || fry.averageThickness || fry.averageCrispiness || fry.averageSaltiness || fry.averageDarkness ? (
                     <>
-                      {renderRatingBar("Length", Math.round(fry.averageLength), ratingDescriptors.length)}
-                      {renderRatingBar("Thickness", Math.round(fry.averageThickness), ratingDescriptors.thickness)}
-                      {renderRatingBar("Crispiness", Math.round(fry.averageCrispiness), ratingDescriptors.crispiness)}
-                      {renderRatingBar("Saltiness", Math.round(fry.averageSaltiness), ratingDescriptors.saltiness)}
-                      {renderRatingBar("Darkness", Math.round(fry.averageDarkness), ratingDescriptors.darkness)}
+                      <CategoryDisplay
+                        length={Math.round(fry.averageLength)}
+                        thickness={Math.round(fry.averageThickness)}
+                        crispiness={Math.round(fry.averageCrispiness)}
+                        saltiness={Math.round(fry.averageSaltiness)}
+                        darkness={Math.round(fry.averageDarkness)}
+                      />
                     </>
                   ) : (
-                    <p className="text-gray-500 text-center py-2">No Details at this time</p>
+                    <p className="text-gray-500 text-center py-2 font-baloo2">No Details at this time</p>
                   )}
                 </div>
                 {fry.recentImages && fry.recentImages.length > 0 && (
@@ -400,6 +391,7 @@ export default function Leaderboard() {
         {topFries.length === 0 && (
           <p className="text-gray-600 text-center">No fries rated yet!</p>
         )}
+      </div>
       </div>
     </div>
   );

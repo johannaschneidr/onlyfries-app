@@ -130,7 +130,9 @@ export default function Verify() {
                   autoComplete="username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value.toLowerCase())}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 text-base h-12 px-4"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-base h-12 px-4"
+                  onFocus={(e) => e.target.style.borderColor = 'var(--yellow-custom)'}
+                  onBlur={(e) => e.target.style.borderColor = '#D1D5DB'}
                   minLength={3}
                   maxLength={20}
                   pattern="[a-z0-9]+"
@@ -152,7 +154,9 @@ export default function Verify() {
                     autoComplete="new-password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 text-base h-12 px-4 pr-12"
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-base h-12 px-4 pr-12"
+                    onFocus={(e) => e.target.style.borderColor = 'var(--yellow-custom)'}
+                    onBlur={(e) => e.target.style.borderColor = '#D1D5DB'}
                     placeholder="••••••••"
                     minLength={6}
                   />
@@ -186,7 +190,9 @@ export default function Verify() {
                     autoComplete="new-password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 text-base h-12 px-4 pr-12"
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-base h-12 px-4 pr-12"
+                    onFocus={(e) => e.target.style.borderColor = 'var(--yellow-custom)'}
+                    onBlur={(e) => e.target.style.borderColor = '#D1D5DB'}
                     placeholder="••••••••"
                     minLength={6}
                   />
@@ -210,7 +216,12 @@ export default function Verify() {
               </div>
               <button
                 type="submit"
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-yellow-500 hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
+                className="mt-4 w-full text-white py-3 px-4 rounded-md shadow-sm text-sm font-medium rounded-md shadow-sm text-white focus:outline-none focus:ring-2 focus:ring-offset-2"
+                style={{ backgroundColor: 'var(--yellow-custom)' }}
+                onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--yellow-custom)'}
+                onMouseLeave={(e) => e.target.style.backgroundColor = 'var(--yellow-custom)'}
+                onFocus={(e) => e.target.style.boxShadow = '0 0 0 2px var(--yellow-custom)'}
+                onBlur={(e) => e.target.style.boxShadow = ''}
               >
                 Create Account
               </button>
@@ -229,7 +240,9 @@ export default function Verify() {
                     autoComplete="current-password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 text-base h-12 px-4 pr-12"
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-base h-12 px-4 pr-12"
+                    onFocus={(e) => e.target.style.borderColor = 'var(--yellow-custom)'}
+                    onBlur={(e) => e.target.style.borderColor = '#D1D5DB'}
                     placeholder="••••••••"
                   />
                   <button
@@ -256,7 +269,10 @@ export default function Verify() {
                       pathname: '/auth/reset-password',
                       query: { email }
                     })}
-                    className="text-sm text-yellow-600 hover:text-yellow-500"
+                    className="text-sm"
+                    style={{ color: 'var(--yellow-custom)' }}
+                    onMouseEnter={(e) => e.target.style.color = 'var(--yellow-custom)'}
+                    onMouseLeave={(e) => e.target.style.color = 'var(--yellow-custom)'}
                   >
                     Forgot password?
                   </button>
@@ -264,7 +280,12 @@ export default function Verify() {
               </div>
               <button
                 type="submit"
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-yellow-500 hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
+                className="mt-4 w-full text-white py-3 px-4 rounded-md shadow-sm text-sm font-medium rounded-md shadow-sm text-white focus:outline-none focus:ring-2 focus:ring-offset-2"
+                style={{ backgroundColor: 'var(--yellow-custom)' }}
+                onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--yellow-custom)'}
+                onMouseLeave={(e) => e.target.style.backgroundColor = 'var(--yellow-custom)'}
+                onFocus={(e) => e.target.style.boxShadow = '0 0 0 2px var(--yellow-custom)'}
+                onBlur={(e) => e.target.style.boxShadow = ''}
               >
                 Continue
               </button>

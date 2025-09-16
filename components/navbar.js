@@ -38,10 +38,10 @@ export default function Navbar() {
           <Image
             src="/assets/logo.png"
             alt="OnlyFries Logo"
-            width={120}
-            height={40}
+            width={150}
+            height={50}
             priority
-            sizes="(max-width: 768px) 120px, 120px"
+            sizes="(max-width: 768px) 150px, 150px"
             style={{ width: 'auto', height: 'auto' }}
           />
         </Link>
@@ -51,9 +51,10 @@ export default function Navbar() {
             href="/search"
             className={`flex items-center gap-2 px-4 py-2 rounded-full transition-colors ${
               isSearchPage
-                ? 'bg-yellow-500 text-white'
+                ? 'text-white'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
+            style={isSearchPage ? { backgroundColor: 'var(--yellow-custom)' } : {}}
             aria-label="Search"
           >
             <svg
@@ -70,16 +71,17 @@ export default function Navbar() {
                 d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
               />
             </svg>
-            <span className="font-medium">Find the perfect fries</span>
+            <span className="font-medium font-baloo2">Find the perfect fries</span>
           </Link>
           {user && (
             <Link
               href="/my-posts"
               className={`flex items-center gap-2 px-4 py-2 rounded-full transition-colors ${
                 isMyPostsPage
-                  ? 'bg-yellow-500 text-white'
+                  ? 'text-white'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
+              style={isMyPostsPage ? { backgroundColor: 'var(--yellow-custom)' } : {}}
               aria-label="My Posts"
             >
               <svg
@@ -96,7 +98,7 @@ export default function Navbar() {
                   d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
                 />
               </svg>
-              <span className="font-medium">My Posts</span>
+              <span className="font-medium font-baloo2">My Posts</span>
             </Link>
           )}
           {user ? (
@@ -104,9 +106,12 @@ export default function Navbar() {
               href="/profile"
               className={`flex items-center gap-2 p-2 transition-colors ${
                 isProfilePage
-                  ? 'text-yellow-500'
-                  : 'text-gray-600 hover:text-yellow-500'
+                  ? ''
+                  : 'text-gray-600'
               }`}
+              style={isProfilePage ? { color: 'var(--yellow-custom)' } : {}}
+              onMouseEnter={(e) => !isProfilePage && (e.target.style.color = 'var(--yellow-custom)')}
+              onMouseLeave={(e) => !isProfilePage && (e.target.style.color = '#6B7280')}
               aria-label="Account"
             >
               <svg
@@ -123,12 +128,15 @@ export default function Navbar() {
                   d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
                 />
               </svg>
-              <span className="font-medium">Profile</span>
+              <span className="font-medium font-baloo2">Profile</span>
             </Link>
           ) : (
             <Link
               href="/login"
-              className="flex items-center gap-2 px-4 py-2 rounded-full bg-yellow-500 text-white hover:bg-yellow-600 transition-colors border-2 border-red-500"
+              className="flex items-center gap-2 px-4 py-2 rounded-full text-white transition-colors border-2 border-red-500"
+              style={{ backgroundColor: 'var(--yellow-custom)' }}
+              onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--yellow-custom)'}
+              onMouseLeave={(e) => e.target.style.backgroundColor = 'var(--yellow-custom)'}
               aria-label="Login"
             >
               <svg
@@ -145,14 +153,16 @@ export default function Navbar() {
                   d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75"
                 />
               </svg>
-              <span className="font-bold uppercase tracking-wide">Login</span>
+              <span className="font-bold uppercase tracking-wide font-baloo2">Login</span>
             </Link>
           )}
         </div>
         {/* Mobile Burger Menu Button */}
         <button
           onClick={toggleMenu}
-          className="md:hidden p-2 text-gray-600 hover:text-yellow-500 transition-colors"
+          className="md:hidden p-2 text-gray-600 transition-colors"
+          onMouseEnter={(e) => e.target.style.color = 'var(--yellow-custom)'}
+          onMouseLeave={(e) => e.target.style.color = '#6B7280'}
           aria-label="Toggle menu"
         >
           <svg
@@ -181,10 +191,10 @@ export default function Navbar() {
                 <Image
                   src="/assets/logo.png"
                   alt="OnlyFries Logo"
-                  width={120}
-                  height={40}
+                  width={150}
+                  height={50}
                   priority
-                  sizes="(max-width: 768px) 120px, 120px"
+                  sizes="(max-width: 768px) 150px, 150px"
                   style={{ width: 'auto', height: 'auto' }}
                 />
               </Link>
@@ -215,9 +225,12 @@ export default function Navbar() {
                 onClick={closeMenu}
                 className={`flex items-center gap-2 p-2 transition-colors ${
                   router.pathname === '/'
-                    ? 'text-yellow-500'
-                    : 'text-gray-600 hover:text-yellow-500'
+                    ? ''
+                    : 'text-gray-600'
                 }`}
+                style={router.pathname === '/' ? { color: 'var(--yellow-custom)' } : {}}
+                onMouseEnter={(e) => router.pathname !== '/' && (e.target.style.color = 'var(--yellow-custom)')}
+                onMouseLeave={(e) => router.pathname !== '/' && (e.target.style.color = '#6B7280')}
                 aria-label="Home"
               >
                 <svg
@@ -234,16 +247,19 @@ export default function Navbar() {
                     d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"
                   />
                 </svg>
-                <span className="font-medium">Home</span>
+                <span className="font-medium font-baloo2">Home</span>
               </Link>
               <Link
                 href="/search"
                 onClick={closeMenu}
                 className={`flex items-center gap-2 p-2 transition-colors ${
                   isSearchPage
-                    ? 'text-yellow-500'
-                    : 'text-gray-600 hover:text-yellow-500'
+                    ? ''
+                    : 'text-gray-600'
                 }`}
+                style={isSearchPage ? { color: 'var(--yellow-custom)' } : {}}
+                onMouseEnter={(e) => !isSearchPage && (e.target.style.color = 'var(--yellow-custom)')}
+                onMouseLeave={(e) => !isSearchPage && (e.target.style.color = '#6B7280')}
                 aria-label="Search"
               >
                 <svg
@@ -260,7 +276,7 @@ export default function Navbar() {
                     d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
                   />
                 </svg>
-                <span className="font-medium">Find the perfect fries</span>
+                <span className="font-medium font-baloo2">Find the perfect fries</span>
               </Link>
               {user && (
                 <Link
@@ -268,9 +284,12 @@ export default function Navbar() {
                   onClick={closeMenu}
                   className={`flex items-center gap-2 p-2 transition-colors ${
                     isMyPostsPage
-                      ? 'text-yellow-500'
-                      : 'text-gray-600 hover:text-yellow-500'
+                      ? ''
+                      : 'text-gray-600'
                   }`}
+                  style={isMyPostsPage ? { color: 'var(--yellow-custom)' } : {}}
+                  onMouseEnter={(e) => !isMyPostsPage && (e.target.style.color = 'var(--yellow-custom)')}
+                  onMouseLeave={(e) => !isMyPostsPage && (e.target.style.color = '#6B7280')}
                   aria-label="My Posts"
                 >
                   <svg
@@ -287,7 +306,7 @@ export default function Navbar() {
                       d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
                     />
                   </svg>
-                  <span className="font-medium">My Posts</span>
+                  <span className="font-medium font-baloo2">My Posts</span>
                 </Link>
               )}
               {user ? (
@@ -297,9 +316,12 @@ export default function Navbar() {
                     onClick={closeMenu}
                     className={`flex items-center gap-2 p-2 transition-colors ${
                       isProfilePage
-                        ? 'text-yellow-500'
-                        : 'text-gray-600 hover:text-yellow-500'
+                        ? ''
+                        : 'text-gray-600'
                     }`}
+                    style={isProfilePage ? { color: 'var(--yellow-custom)' } : {}}
+                    onMouseEnter={(e) => !isProfilePage && (e.target.style.color = 'var(--yellow-custom)')}
+                    onMouseLeave={(e) => !isProfilePage && (e.target.style.color = '#6B7280')}
                     aria-label="Account"
                   >
                     <svg
@@ -316,7 +338,7 @@ export default function Navbar() {
                         d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
                       />
                     </svg>
-                    <span className="font-medium">Profile</span>
+                    <span className="font-medium font-baloo2">Profile</span>
                   </Link>
                   <button
                     onClick={handleLogout}
@@ -337,14 +359,16 @@ export default function Navbar() {
                         d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75"
                       />
                     </svg>
-                    <span className="font-bold uppercase tracking-wide">Logout</span>
+                    <span className="font-bold uppercase tracking-wide font-baloo2">Logout</span>
                   </button>
                 </>
               ) : (
                 <Link
                   href="/login"
                   onClick={closeMenu}
-                  className="flex items-center gap-2 p-2 text-gray-600 hover:text-yellow-500 transition-colors border-2 border-red-500 rounded-lg"
+                  className="flex items-center gap-2 p-2 text-gray-600 transition-colors border-2 border-red-500 rounded-lg"
+                  onMouseEnter={(e) => e.target.style.color = 'var(--yellow-custom)'}
+                  onMouseLeave={(e) => e.target.style.color = '#6B7280'}
                   aria-label="Login"
                 >
                   <svg
@@ -361,7 +385,7 @@ export default function Navbar() {
                       d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75"
                     />
                   </svg>
-                  <span className="font-bold uppercase tracking-wide">Login</span>
+                  <span className="font-bold uppercase tracking-wide font-baloo2">Login</span>
                 </Link>
               )}
             </div>

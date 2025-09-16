@@ -167,9 +167,14 @@ export default function ReactionPicker({ postId, onReactionAdded, hideGifButton 
           onClick={handleFireClick}
           className={`flex items-center gap-1 px-2 py-1 rounded-full border transition-colors ${
             hasVoted 
-              ? 'bg-yellow-50 border-yellow-200 text-yellow-600' 
+              ? '' 
               : 'bg-white/60 hover:bg-white/80 border-gray-200'
           }`}
+          style={hasVoted ? { 
+            backgroundColor: 'var(--yellow-custom)', 
+            borderColor: 'var(--yellow-custom)', 
+            color: '#374151' 
+          } : {}}
         >
           <span className="text-base">🔥</span>
           {fireCount > 0 && (
@@ -194,7 +199,10 @@ export default function ReactionPicker({ postId, onReactionAdded, hideGifButton 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="React with a GIF..."
-            className="w-full px-4 py-2.5 text-base border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-full focus:outline-none focus:ring-2"
+            style={{ fontSize: 16 }}
+            onFocus={(e) => e.target.style.boxShadow = '0 0 0 2px var(--yellow-custom)'}
+            onBlur={(e) => e.target.style.boxShadow = ''}
           />
           <div className="absolute right-3 top-1/2 -translate-y-1/2 inline-flex items-center">
             {isLoading ? (
@@ -235,7 +243,9 @@ export default function ReactionPicker({ postId, onReactionAdded, hideGifButton 
                 <button
                   key={gif.id}
                   onClick={() => handleGifClick(gif)}
-                  className="aspect-square rounded-lg overflow-hidden hover:ring-2 hover:ring-yellow-500 transition-all"
+                  className="aspect-square rounded-lg overflow-hidden hover:ring-2 transition-all"
+                  onMouseEnter={(e) => e.target.style.boxShadow = '0 0 0 2px var(--yellow-custom)'}
+                  onMouseLeave={(e) => e.target.style.boxShadow = ''}
                 >
                   <img
                     src={gif.images.fixed_height.url}

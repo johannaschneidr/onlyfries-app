@@ -2,18 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  background-image: url('/assets/background.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
-  min-height: 100vh;
+:root {
+  --yellow-custom: #FDF551;
+  --red-custom: #EA3323;
+  --blue-custom: #4580D3;
+  --light-blue-custom: #7BB8FE;
 }
 
-/* Prevent iOS Safari from zooming on input fields */
-input, textarea, select {
-  font-size: 16px !important;
+body {
+  font-family: var(--font-baloo2), system-ui, -apple-system, sans-serif;
+  background-color: #4580D3;
+  /* background-image: url('/assets/background.png'); */
+  /* background-size: cover; */
+  /* background-position: center; */
+  /* background-repeat: no-repeat; */
+  /* background-attachment: fixed; */
+  min-height: 100vh;
 }
 
 /* Remove the overlay */

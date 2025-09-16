@@ -55,10 +55,11 @@ export default function Home() {
       <Header />
       <main className="max-w-4xl mx-auto p-4">
         <UploadButton />
-        <div className="mb-8">
+        <div className="mb-12 mt-8">
+          <h2 className="text-4xl font-bold mb-3 font-rouge-script" style={{ color: 'var(--yellow-custom)' }}>True and Tested</h2>
           <Leaderboard />
         </div>
-        <h1 className="text-2xl font-bold mb-6 text-gray-800">Latest Fries Posts</h1>
+        <h1 className="text-4xl font-bold mb-3 font-rouge-script" style={{ color: 'var(--yellow-custom)' }}>New to the party</h1>
         <div className="grid gap-6">
           {posts.map(post => (
             <PostCard key={post.id} post={post} openLoginModal={() => setShowLoginModal(true)} />
