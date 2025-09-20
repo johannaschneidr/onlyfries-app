@@ -49,20 +49,21 @@ const renderRatingBar = (label, value, descriptors) => {
   if (!value) return null;
   return (
     <div className="flex items-center h-full gap-2">
-      <span className="text-sm text-gray-500 w-20">{label}</span>
+      <span className="text-sm text-gray-500 w-20 font-baloo2">{label}</span>
       <div className="flex gap-1 flex-1">
         {[1, 2, 3, 4, 5].map((num) => (
           <div
             key={num}
-            className={`w-full h-6 rounded-md flex items-center justify-center text-xs font-medium transition-colors
+            className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium transition-colors
               ${value === num 
-                ? 'bg-yellow-500 text-white' 
+                ? 'text-white' 
                 : 'bg-gray-100 text-gray-700'
               }`}
+            style={value === num ? { backgroundColor: 'var(--blue-custom)' } : {}}
           />
         ))}
       </div>
-      <span className="text-sm font-medium text-gray-700 w-20 text-right">
+      <span className="text-sm font-medium text-gray-700 w-20 text-right font-baloo2">
         {descriptors[value]}
       </span>
     </div>

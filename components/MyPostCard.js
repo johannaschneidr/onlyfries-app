@@ -123,7 +123,8 @@ export default function MyPostCard({ post }) {
     return Array(5).fill(0).map((_, index) => (
       <svg
         key={index}
-        className={`w-10 h-10 ${index < rating ? 'text-yellow-500' : 'text-gray-300'} -mr-1`}
+        className={`w-10 h-10 ${index < rating ? '' : 'text-gray-300'} -mr-1`}
+        style={index < rating ? { color: 'var(--yellow-custom)' } : {}}
         fill="currentColor"
         viewBox="0 0 20 20"
       >
@@ -141,33 +142,6 @@ export default function MyPostCard({ post }) {
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)/g, '');
-  };
-
-  const renderRatingBar = (label, value, descriptors) => {
-    if (!value) return null;
-    
-    return (
-      <div className="bg-white/60 backdrop-blur-sm rounded-md border border-white/50 h-[40px]">
-        <div className="flex items-center h-full gap-2 px-3">
-          <span className="text-sm text-gray-500 w-20">{label}</span>
-          <div className="flex gap-1 flex-1">
-            {[1, 2, 3, 4, 5].map((num) => (
-              <div
-                key={num}
-                className={`w-full h-6 rounded-md flex items-center justify-center text-xs font-medium transition-colors
-                  ${value === num 
-                    ? 'bg-yellow-500 text-white' 
-                    : 'bg-white text-gray-700'
-                  }`}
-              />
-            ))}
-          </div>
-          <span className="text-sm font-medium text-gray-700 w-20 text-right">
-            {descriptors[Math.round(value)]}
-          </span>
-        </div>
-      </div>
-    );
   };
 
   const visibleReactions = showAllGifs ? reactions : reactions.slice(0, 1);

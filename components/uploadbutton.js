@@ -35,7 +35,15 @@ export default function UploadButton() {
   };
 
   return (
-    <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 mb-6">
+    <div 
+      className="rounded-xl p-4 mb-6" 
+      style={{ 
+        borderWidth: '3px', 
+        borderStyle: 'solid', 
+        borderColor: 'black',
+        backgroundColor: '#DFEEFF'
+      }}
+    >
       <div className="relative">
         <input
           ref={imageInputRef}
@@ -47,27 +55,34 @@ export default function UploadButton() {
         {!preview ? (
           <div 
             onClick={() => imageInputRef.current?.click()}
-            className="border-2 border-dashed border-white rounded-md p-8 text-center cursor-pointer"
+            className="border-dashed rounded-md p-8 text-center cursor-pointer"
+            style={{ borderWidth: '3px', borderColor: 'var(--blue-custom)' }}
           >
             <div className="flex flex-col items-center justify-center">
               <div className="relative mb-4">
-                <div className="absolute inset-0 bg-yellow-400/10 rounded-full blur-lg" />
+                <div className="absolute inset-0 rounded-full blur-lg" style={{ backgroundColor: 'var(--yellow-custom)', opacity: 0.1 }} />
                 <svg 
-                  className="w-16 h-16 text-yellow-500 relative z-10" 
-                  fill="none" 
-                  stroke="currentColor" 
+                  className="w-20 h-20 relative z-10" 
+                  fill="currentColor" 
                   viewBox="0 0 24 24"
+                  style={{ color: 'black' }}
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path d="M4 4H8L10 6H14L16 4H20C21.1 4 22 4.9 22 6V18C22 19.1 21.1 20 20 20H4C2.9 20 2 19.1 2 18V6C2 4.9 2.9 4 4 4ZM12 17C14.76 17 17 14.76 17 12S14.76 7 12 7S7 9.24 7 12S9.24 17 12 17ZM12 9C13.66 9 15 10.34 15 12S13.66 15 12 15S9 13.66 9 12S10.34 9 12 9ZM18 8H20V6H18V8Z" />
                 </svg>
               </div>
-              <p className="text-lg font-medium text-gray-700">
-                Rate your Fries!
-              </p>
-              <p className="text-sm text-gray-500 mt-2">
-                PNG, JPG up to 5MB
-              </p>
+              <div 
+                className="inline-block px-10 py-2 rounded-full mt-2"
+                style={{ 
+                  borderWidth: '3px', 
+                  borderStyle: 'solid', 
+                  borderColor: 'var(--red-custom)',
+                  backgroundColor: 'var(--yellow-custom)'
+                }}
+              >
+                <p className="text-2xl font-medium font-quattrocento underline whitespace-nowrap" style={{ color: 'var(--red-custom)' }}>
+                  RATE YOUR FRIES
+                </p>
+              </div>
             </div>
           </div>
         ) : (
@@ -77,11 +92,13 @@ export default function UploadButton() {
                 src={preview} 
                 alt="Preview" 
                 className="w-full h-64 object-cover rounded-md"
+                style={{ borderWidth: '3px', borderStyle: 'solid', borderColor: 'black' }}
               />
               <button
                 type="button"
                 onClick={handleRemoveImage}
-                className="absolute top-3 right-3 bg-white/60 backdrop-blur-sm hover:bg-white text-gray-800 rounded-full p-3 shadow-lg"
+                className="absolute top-3 right-3 bg-white hover:bg-gray-100 text-gray-800 rounded-full p-3 shadow-lg"
+                style={{ borderWidth: '2px', borderStyle: 'solid', borderColor: 'black' }}
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -91,9 +108,16 @@ export default function UploadButton() {
             <button
               type="button"
               onClick={handleProceed}
-              className="w-full bg-yellow-500 text-white py-4 px-6 rounded-md text-lg font-semibold"
+              className="w-full px-10 py-2 rounded-full text-2xl font-medium font-quattrocento underline"
+              style={{ 
+                backgroundColor: 'var(--yellow-custom)',
+                borderWidth: '3px',
+                borderStyle: 'solid',
+                borderColor: 'var(--red-custom)',
+                color: 'var(--red-custom)'
+              }}
             >
-              Rate
+              Looks hottt
             </button>
           </div>
         )}

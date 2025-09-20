@@ -55,11 +55,12 @@ const renderRatingBar = (label, value, descriptors) => {
         {[1, 2, 3, 4, 5].map((num) => (
           <div
             key={num}
-            className={`w-full h-6 rounded-md flex items-center justify-center text-xs font-medium transition-colors
+            className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium transition-colors
               ${rounded === num 
-                ? 'bg-yellow-500 text-white' 
+                ? 'text-white' 
                 : 'bg-gray-100 text-gray-700'
               }`}
+            style={rounded === num ? { backgroundColor: 'var(--yellow-custom)' } : {}}
           />
         ))}
       </div>

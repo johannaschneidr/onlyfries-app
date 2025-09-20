@@ -6,6 +6,11 @@ module.exports = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        'baloo2': ['var(--font-baloo2)', 'system-ui', 'sans-serif'],
+        'rouge-script': ['var(--font-rouge-script)', 'cursive'],
+        'quattrocento': ['var(--font-quattrocento)', 'serif'],
+      },
       colors: {
         primary: {
           50: '#FFF5E6',

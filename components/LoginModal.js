@@ -26,7 +26,10 @@ export default function LoginModal({ isOpen, onClose }) {
         <div className="space-y-3">
           <button
             onClick={() => router.push('/login')}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-yellow-500 rounded-lg hover:bg-yellow-600 transition-colors"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors"
+            style={{ backgroundColor: 'var(--yellow-custom)' }}
+            onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--yellow-custom)'}
+            onMouseLeave={(e) => e.target.style.backgroundColor = 'var(--yellow-custom)'}
           >
             Log in or create an account
           </button>

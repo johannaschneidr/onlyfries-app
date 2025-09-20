@@ -85,7 +85,9 @@ export default function ChangePassword() {
                 id="currentPassword"
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 text-base h-12 px-4"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-base h-12 px-4"
+                onFocus={(e) => e.target.style.borderColor = 'var(--yellow-custom)'}
+                onBlur={(e) => e.target.style.borderColor = '#D1D5DB'}
                 placeholder="••••••••"
               />
             </div>
@@ -98,7 +100,9 @@ export default function ChangePassword() {
                 id="newPassword"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 text-base h-12 px-4"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-base h-12 px-4"
+                onFocus={(e) => e.target.style.borderColor = 'var(--yellow-custom)'}
+                onBlur={(e) => e.target.style.borderColor = '#D1D5DB'}
                 placeholder="••••••••"
                 minLength={6}
               />
@@ -112,7 +116,9 @@ export default function ChangePassword() {
                 id="confirmPassword"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 text-base h-12 px-4"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-base h-12 px-4"
+                onFocus={(e) => e.target.style.borderColor = 'var(--yellow-custom)'}
+                onBlur={(e) => e.target.style.borderColor = '#D1D5DB'}
                 placeholder="••••••••"
                 minLength={6}
               />
@@ -120,7 +126,12 @@ export default function ChangePassword() {
             <div className="flex space-x-3">
               <button
                 type="submit"
-                className="flex-1 flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-yellow-500 hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
+                className="mt-4 w-full text-white py-3 px-4 rounded-md shadow-sm text-sm font-medium rounded-md shadow-sm text-white focus:outline-none focus:ring-2 focus:ring-offset-2"
+                style={{ backgroundColor: 'var(--yellow-custom)' }}
+                onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--yellow-custom)'}
+                onMouseLeave={(e) => e.target.style.backgroundColor = 'var(--yellow-custom)'}
+                onFocus={(e) => e.target.style.boxShadow = '0 0 0 2px var(--yellow-custom)'}
+                onBlur={(e) => e.target.style.boxShadow = ''}
               >
                 Update Password
               </button>

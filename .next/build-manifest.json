@@ -27,10 +27,10 @@
       "static/chunks/main.js",
       "static/chunks/pages/_error.js"
     ],
-    "/auth/verify": [
+    "/new": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/auth/verify.js"
+      "static/chunks/pages/new.js"
     ]
   },
   "ampFirstPages": []

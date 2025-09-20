@@ -79,7 +79,7 @@ export default function MyPosts() {
     <div className="min-h-screen flex flex-col">
       <Navbar />
       <main className="flex-1 max-w-4xl mx-auto p-4 w-full">
-        <h1 className="text-2xl font-bold mb-6 text-gray-800">My Posts</h1>
+        <h1 className="text-2xl font-bold mb-6 font-rouge-script" style={{ color: 'var(--yellow-custom)' }}>My Posts</h1>
         {posts.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-gray-600">You haven't posted any fries yet.</p>
