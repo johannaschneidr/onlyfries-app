@@ -309,36 +309,6 @@ export default function Leaderboard() {
                     {fry.totalReviews} review{fry.totalReviews !== 1 ? 's' : ''}
                   </span>
                 </div>
-                {expandedCard === fry.id && (
-                  <div className="flex items-center gap-4 mt-4">
-                    <Link
-                      href={`/location/${fry.name.split(',')[0].trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}`}
-                      className="flex items-center gap-1 text-gray-500 transition-colors"
-                      onMouseEnter={(e) => e.target.style.color = 'var(--yellow-custom)'}
-                      onMouseLeave={(e) => e.target.style.color = '#6B7280'}
-                      onClick={e => e.stopPropagation()}
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 21c-4.418 0-8-4.03-8-9a8 8 0 1116 0c0 4.97-3.582 9-8 9zm0-11a2 2 0 100 4 2 2 0 000-4z" />
-                      </svg>
-                      <span className="text-sm font-baloo2">Full profile</span>
-                    </Link>
-                    <a
-                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fry.name)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1 text-gray-500 transition-colors"
-                      onMouseEnter={(e) => e.target.style.color = 'var(--yellow-custom)'}
-                      onMouseLeave={(e) => e.target.style.color = '#6B7280'}
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" />
-                      </svg>
-                      <span className="text-sm font-baloo2">Open in Google Maps</span>
-                    </a>
-                  </div>
-                )}
               </div>
               <div className="flex items-center gap-2">
                 <div className="flex flex-col items-end">
@@ -348,6 +318,40 @@ export default function Leaderboard() {
                 </div>
               </div>
             </div>
+            {expandedCard === fry.id && (
+              <div className="flex items-center mt-2 mb-6 w-full" style={{ gap: '16px' }}>
+                <Link
+                  href={`/location/${fry.name.split(',')[0].trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}`}
+                  className="flex items-center justify-center transition-colors px-4 py-3 rounded-full flex-1 font-quattrocento underline uppercase"
+                  style={{ 
+                    color: 'var(--red-custom)',
+                    borderWidth: '3px', 
+                    borderStyle: 'solid', 
+                    borderColor: 'var(--red-custom)' 
+                  }}
+                  onMouseEnter={(e) => e.target.style.color = 'var(--yellow-custom)'}
+                  onMouseLeave={(e) => e.target.style.color = 'var(--red-custom)'}
+                  onClick={e => e.stopPropagation()}
+                >
+                  <span className="text-sm">FULL PROFILE</span>
+                </Link>
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fry.name)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-1 text-black transition-colors px-4 py-3 rounded-full flex-1"
+                  style={{ borderWidth: '3px', borderStyle: 'solid', borderColor: 'black' }}
+                  onMouseEnter={(e) => e.target.style.color = 'var(--yellow-custom)'}
+                  onMouseLeave={(e) => e.target.style.color = 'black'}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" />
+                  </svg>
+                  <span className="text-sm font-baloo2">Google Maps</span>
+                </a>
+              </div>
+            )}
             {expandedCard === fry.id && (
               <>
                 <div className="space-y-3 mt-2">
@@ -365,11 +369,11 @@ export default function Leaderboard() {
                     <p className="text-gray-500 text-center py-2 font-baloo2">No Details at this time</p>
                   )}
                 </div>
-                {fry.recentImages && fry.recentImages.length > 0 && (
+                {((locationImages[fry.locationName] && locationImages[fry.locationName].length > 0) || (fry.recentImages && fry.recentImages.length > 0)) && (
                   <div className="mt-4">
-                    <h4 className="text-sm font-medium text-gray-500 mb-3">Recent Uploads</h4>
+                    <h4 className="text-lg font-bold text-black mt-6 mb-2 font-baloo2 uppercase">Recent Uploads</h4>
                     <ImageGallery
-                      images={fry.recentImages}
+                      images={locationImages[fry.locationName] || fry.recentImages}
                       selectedIndex={selectedImageIndex[fry.id] || 0}
                       onSelect={idx => setSelectedImageIndex(prev => ({ ...prev, [fry.id]: idx }))}
                     />
@@ -377,12 +381,13 @@ export default function Leaderboard() {
                 )}
                 <button
                   onClick={() => setExpandedCard(null)}
-                  className="flex items-center gap-2 mt-4 text-gray-500 hover:text-gray-700 transition-colors"
+                  className="flex items-center gap-2 mt-4 hover:text-gray-700 transition-colors font-quattrocento underline"
+                  style={{ color: 'var(--red-custom)' }}
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 15l7-7 7 7" />
                   </svg>
-                  Collapse
+                  COLLAPSE
                 </button>
               </>
             )}

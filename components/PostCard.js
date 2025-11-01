@@ -8,7 +8,7 @@ import ReactionPicker from './ReactionPicker';
 import CategoryDisplay from './CategoryDisplay';
 
 export default function PostCard({ post, openLoginModal }) {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
   const [showAllGifs, setShowAllGifs] = useState(false);
   const [reactions, setReactions] = useState([]);
   const [showReactions, setShowReactions] = useState(false);
@@ -155,7 +155,7 @@ export default function PostCard({ post, openLoginModal }) {
         </div>
 
         <div className="mt-1">
-          <h2 className="text-3xl font-semibold text-gray-800 mb-2 mt-3 font-baloo2">
+          <h2 className="text-3xl font-semibold text-gray-800 mb-1 mt-3 font-baloo2">
             <Link href={`/location/${createLocationSlug(post.locationName)}`} className="hover:text-gray-600 transition-colors font-baloo2">
               {getEstablishmentName(post.locationName)}
             </Link>
@@ -185,7 +185,8 @@ export default function PostCard({ post, openLoginModal }) {
           <div className="space-y-1">
             <button
               onClick={() => setIsExpanded(!isExpanded)}
-              className="w-full py-1 text-sm font-medium text-gray-500 hover:text-gray-800 transition-colors flex items-start gap-1 rounded-md font-baloo2"
+              className="w-full py-1 text-sm font-medium hover:text-gray-800 transition-colors flex items-start gap-1 rounded-md font-quattrocento underline"
+              style={{ color: 'var(--red-custom)' }}
             >
               <svg
                 className={`w-4 h-4 mt-0.5 transition-transform text-gray-500 ${isExpanded ? 'rotate-180' : ''}`}
@@ -195,7 +196,7 @@ export default function PostCard({ post, openLoginModal }) {
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
-              {isExpanded ? 'Hide' : 'Details'}
+              {isExpanded ? 'HIDE' : 'DETAILS'}
             </button>
             
             {isExpanded && (
@@ -226,17 +227,16 @@ export default function PostCard({ post, openLoginModal }) {
               {!showReactions ? (
                 <button
                   onClick={() => setShowReactions(true)}
-                  className="w-full py-2 px-3 text-sm font-medium text-gray-600 hover:text-gray-900 bg-white/0 backdrop-blur-sm border border-gray-200 flex items-center justify-center gap-1 transition-colors font-baloo2"
+                  className="w-full py-2 px-3 text-sm font-bold hover:text-gray-900 flex items-center justify-center transition-colors font-quattrocento underline rounded-full"
+                  style={{ 
+                    color: 'var(--red-custom)',
+                    backgroundColor: '#DFEEFF',
+                    borderWidth: '3px',
+                    borderStyle: 'solid',
+                    borderColor: 'black'
+                  }}
                 >
-                  <span>Show {reactions.length} Reaction{reactions.length > 1 ? 's' : ''}</span>
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
+                  <span>SHOW {reactions.length} REACTION{reactions.length > 1 ? 'S' : ''}</span>
                 </button>
               ) : (
                 <div className="space-y-4">
@@ -262,17 +262,16 @@ export default function PostCard({ post, openLoginModal }) {
                   ))}
                   <button
                     onClick={() => setShowReactions(false)}
-                    className="w-full py-2 px-3 text-sm font-medium text-gray-600 hover:text-gray-900 bg-white/0 backdrop-blur-sm border border-gray-200 flex items-center justify-center gap-1 transition-colors font-baloo2"
+                    className="w-full py-2 px-3 text-sm font-bold hover:text-gray-900 flex items-center justify-center transition-colors font-quattrocento underline rounded-full"
+                    style={{ 
+                      color: 'var(--red-custom)',
+                      backgroundColor: '#DFEEFF',
+                      borderWidth: '3px',
+                      borderStyle: 'solid',
+                      borderColor: 'black'
+                    }}
                   >
-                    <span>Hide Reactions</span>
-                    <svg
-                      className="w-4 h-4 rotate-180"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
+                    <span>HIDE REACTIONS</span>
                   </button>
                 </div>
               )}
