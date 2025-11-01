@@ -50,7 +50,7 @@ const renderRatingBar = (label, value, descriptors) => {
   const rounded = Math.round(value);
   return (
     <div className="flex items-center h-full gap-2">
-      <span className="text-sm text-gray-500 w-20">{label}</span>
+      <span className="text-sm text-gray-500 w-20 font-quattrocento uppercase">{label}</span>
       <div className="flex gap-1 flex-1">
         {[1, 2, 3, 4, 5].map((num) => (
           <div
@@ -60,11 +60,11 @@ const renderRatingBar = (label, value, descriptors) => {
                 ? 'text-white' 
                 : 'bg-gray-100 text-gray-700'
               }`}
-            style={rounded === num ? { backgroundColor: 'var(--yellow-custom)' } : {}}
+            style={rounded === num ? { backgroundColor: 'var(--blue-custom)' } : {}}
           />
         ))}
       </div>
-      <span className="text-sm font-medium text-gray-700 w-20 text-right">
+      <span className="text-sm font-medium text-black w-20 text-right font-baloo2 uppercase">
         {descriptors[rounded]}
       </span>
     </div>
@@ -86,7 +86,7 @@ export default function CategoryAveragesDisplay({
       {renderRatingBar("Crispiness", crispiness, ratingDescriptors.crispiness)}
       {renderRatingBar("Crunchiness", crunchiness, ratingDescriptors.crunchiness)}
       {renderRatingBar("Saltiness", saltiness, ratingDescriptors.saltiness)}
-      {renderRatingBar("Darkness", darkness, ratingDescriptors.darkness)}
+      {renderRatingBar("Color", darkness, ratingDescriptors.darkness)}
     </div>
   );
 } 

@@ -49,7 +49,7 @@ const renderRatingBar = (label, value, descriptors) => {
   if (!value) return null;
   return (
     <div className="flex items-center h-full gap-2">
-      <span className="text-sm text-gray-500 w-20 font-baloo2">{label}</span>
+      <span className="text-sm text-gray-500 w-20 font-quattrocento uppercase">{label}</span>
       <div className="flex gap-1 flex-1">
         {[1, 2, 3, 4, 5].map((num) => (
           <div
@@ -63,7 +63,7 @@ const renderRatingBar = (label, value, descriptors) => {
           />
         ))}
       </div>
-      <span className="text-sm font-medium text-gray-700 w-20 text-right font-baloo2">
+      <span className="text-sm font-medium text-black w-20 text-right font-baloo2 uppercase">
         {descriptors[value]}
       </span>
     </div>
@@ -85,7 +85,7 @@ export default function CategoryDisplay({
       {renderRatingBar("Crispiness", crispiness, ratingDescriptors.crispiness)}
       {renderRatingBar("Crunchiness", crunchiness, ratingDescriptors.crunchiness)}
       {renderRatingBar("Saltiness", saltiness, ratingDescriptors.saltiness)}
-      {renderRatingBar("Darkness", darkness, ratingDescriptors.darkness)}
+      {renderRatingBar("Color", darkness, ratingDescriptors.darkness)}
     </div>
   );
 } 

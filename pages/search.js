@@ -308,7 +308,7 @@ export default function SearchPage() {
             {renderRatingSelector('thickness', 'Thickness')}
             {renderRatingSelector('crispiness', 'Crispiness')}
             {renderRatingSelector('saltiness', 'Saltiness')}
-            {renderRatingSelector('darkness', 'Darkness')}
+            {renderRatingSelector('darkness', 'Color')}
             {/* Fry type tags filter UI (moved below other filters, matches PostForm) */}
             <TagTypeDropdown
               allFryTypes={allFryTypes}

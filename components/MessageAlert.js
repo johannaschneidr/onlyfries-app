@@ -1,13 +1,30 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 
-const MessageAlert = ({ type = 'info', message, className = '', onClose }) => {
+const MessageAlert = ({ type = 'info', message, className = '', onClose, onOutsideClick }) => {
+  const alertRef = useRef(null);
+
+  useEffect(() => {
+    if (!message || !onOutsideClick) return;
+
+    const handleClickOutside = (event) => {
+      if (alertRef.current && !alertRef.current.contains(event.target)) {
+        onOutsideClick();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [message, onOutsideClick]);
+
   if (!message) return null;
 
-  const baseClasses = "flex items-start gap-3 p-4 rounded-xl border backdrop-blur-sm";
+  const baseClasses = "flex items-center gap-3 p-4 rounded-xl";
   
   const typeClasses = {
     success: "bg-success-50 border-success-200 text-success-700",
-    error: "bg-error-50 border-error-200 text-error-700", 
+    error: "bg-white",
     warning: "bg-warning-50 border-warning-200 text-warning-700",
     info: "bg-blue-50 border-blue-200 text-blue-700"
   };
@@ -42,13 +59,23 @@ const MessageAlert = ({ type = 'info', message, className = '', onClose }) => {
     )
   };
 
+  const borderStyle = type === 'error' 
+    ? { borderWidth: '3px', borderStyle: 'solid', borderColor: 'var(--red-custom)' }
+    : {};
+
+  const textColorStyle = type === 'error'
+    ? { color: 'var(--red-custom)' }
+    : {};
+
   return (
-    <div className={`${baseClasses} ${typeClasses[type]} ${className}`}>
-      <div className={`${iconClasses[type]} mt-0.5`}>
-        {icons[type]}
-      </div>
+    <div ref={alertRef} className={`${baseClasses} ${typeClasses[type]} ${className}`} style={borderStyle}>
+      {type !== 'error' && (
+        <div className={`${iconClasses[type]} mt-0.5`}>
+          {icons[type]}
+        </div>
+      )}
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium leading-5">
+        <p className="text-base font-medium leading-5 font-baloo2" style={textColorStyle}>
           {message}
         </p>
       </div>

@@ -1,4 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
+import PrimaryButton from './PrimaryButton';
+import SecondaryButton from './SecondaryButton';
+import TertiaryButton from './TertiaryButton';
 import { storage, db } from '../lib/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { collection, addDoc, query, where, getDocs, updateDoc, arrayUnion } from 'firebase/firestore';
@@ -14,7 +17,7 @@ export default function PostForm() {
     2: "Meh",
     3: "Solid",
     4: "Crack",
-    5: "F***in Slaying"
+    5: "Slaying"
   };
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -24,6 +27,8 @@ export default function PostForm() {
   const [error, setError] = useState('');
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [showAnonymousWarning, setShowAnonymousWarning] = useState(false);
+  const [showNavigationWarning, setShowNavigationWarning] = useState(false);
+  const [pendingNavigation, setPendingNavigation] = useState(null);
   const [formData, setFormData] = useState({
     locationName: '',
     menuName: '',
@@ -38,6 +43,7 @@ export default function PostForm() {
   });
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [showMaxLimitError, setShowMaxLimitError] = useState(false);
   const locationInputRef = useRef(null);
   const autocompleteRef = useRef(null);
   const inputElementRef = useRef(null);
@@ -113,15 +119,19 @@ export default function PostForm() {
     const value = e.target.value;
     setTagInput(value);
     if (value) {
-      const filtered = allFryTypes.filter(type => 
-        type.label.toLowerCase().includes(value.toLowerCase()) &&
-        !formData.types.includes(type.value)
-      );
+      const filtered = allFryTypes
+        .filter(type => 
+          type.label.toLowerCase().includes(value.toLowerCase()) &&
+          !formData.types.includes(type.value)
+        )
+        .sort((a, b) => a.label.localeCompare(b.label));
       setSuggestions(filtered);
       setShowSuggestions(true);
     } else {
       // Show all available options if input is empty
-      const filtered = allFryTypes.filter(type => !formData.types.includes(type.value));
+      const filtered = allFryTypes
+        .filter(type => !formData.types.includes(type.value))
+        .sort((a, b) => a.label.localeCompare(b.label));
       setSuggestions(filtered);
       setShowSuggestions(true);
     }
@@ -130,10 +140,17 @@ export default function PostForm() {
   // Add a tag
   const addTag = (type) => {
     if (!formData.types.includes(type.value)) {
+      if (formData.types.length >= 4) {
+        // Don't add if already at limit, show error
+        setShowMaxLimitError(true);
+        setTimeout(() => setShowMaxLimitError(false), 3000); // Clear after 3 seconds
+        return;
+      }
       setFormData(prev => ({
         ...prev,
         types: [...prev.types, type.value]
       }));
+      setShowMaxLimitError(false); // Clear error if successfully added
     }
     setTagInput('');
     setShowSuggestions(false);
@@ -145,6 +162,7 @@ export default function PostForm() {
       ...prev,
       types: prev.types.filter(type => type !== typeToRemove)
     }));
+    setShowMaxLimitError(false); // Clear error when removing a tag
   };
 
   // Handle key events for tag input
@@ -159,16 +177,27 @@ export default function PostForm() {
 
   // Memoize the location input to prevent unnecessary re-renders
   const LocationInput = useMemo(() => (
-    <div className="relative bg-white/60 backdrop-blur-sm rounded-md border border-white/50 h-[60px]">
-      <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
-        <svg className="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-        </svg>
-      </div>
-      <div id="location-container" className="w-full h-full" />
+    <div className="relative h-[60px]" style={{ borderBottom: '3px solid black' }}>
+      <div id="location-container" className="w-full h-full px-4 sm:px-6" />
+      {formData.locationName && (
+        <button
+          type="button"
+          onClick={() => {
+            updateFormData({ locationName: '' });
+            if (inputElementRef.current) {
+              inputElementRef.current.value = '';
+            }
+          }}
+          className="absolute right-4 sm:right-6 top-1/2 -translate-y-1/2 text-gray-800 hover:text-gray-600"
+          aria-label="Clear location"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      )}
     </div>
-  ), []);
+  ), [formData.locationName]);
 
   // Update the useEffect for Google Places Autocomplete
   useEffect(() => {
@@ -187,15 +216,19 @@ export default function PostForm() {
       if (!inputElementRef.current) {
         const input = document.createElement('input');
         input.type = 'text';
-        input.className = 'w-full h-full p-4 pl-12 text-base bg-transparent outline-none';
-        input.placeholder = 'Search for a location';
+        input.className = 'w-full h-full py-4 pr-10 sm:pr-12 text-base bg-transparent outline-none';
+        input.placeholder = 'Type to search';
         input.style.boxShadow = 'none';
         inputElementRef.current = input;
       }
 
       const input = inputElementRef.current;
+      input.className = 'w-full h-full py-4 pr-10 sm:pr-12 text-base bg-transparent outline-none';
+      input.placeholder = 'Type to search';
       if (formData.locationName) {
         input.value = formData.locationName;
+      } else {
+        input.value = '';
       }
 
       if (!container.contains(input)) {
@@ -224,7 +257,7 @@ export default function PostForm() {
             margin-top: 6px !important;
             background-color: white !important;
             backdrop-filter: blur(8px) !important;
-            border: none !important;
+            border: 3px solid black !important;
             border-radius: 6px !important;
             box-shadow: none !important;
             font-family: inherit !important;
@@ -286,8 +319,8 @@ export default function PostForm() {
       if (!inputElementRef.current) {
         const input = document.createElement('input');
         input.type = 'text';
-        input.className = 'w-full h-full p-4 pl-12 text-base bg-transparent outline-none';
-        input.placeholder = 'Enter location name';
+        input.className = 'w-full h-full py-4 pr-10 sm:pr-12 text-base bg-transparent outline-none';
+        input.placeholder = 'Type to search';
         input.style.boxShadow = 'none';
         input.value = formData.locationName;
         input.addEventListener('input', (e) => {
@@ -407,11 +440,7 @@ export default function PostForm() {
       if (formData.types.length === 0) missingFields.push('type of fries');
 
       if (missingFields.length > 0) {
-        if (missingFields.length === 1) {
-          setError(`Please add a ${missingFields[0]}`);
-        } else {
-          setError('Please provide all required information');
-        }
+        setError("Oops - something's missing");
         return;
       }
     }
@@ -435,11 +464,7 @@ export default function PostForm() {
     if (formData.types.length === 0) missingFields.push('type of fries');
 
     if (missingFields.length > 0) {
-      if (missingFields.length === 1) {
-        setError(`Please add a ${missingFields[0]}`);
-      } else {
-        setError('Please provide all required information');
-      }
+      setError("Oops - something's missing");
       return;
     }
 
@@ -573,20 +598,14 @@ export default function PostForm() {
               </button>
             ))}
           </div>
-          {value > 0 ? (
-            <span className="text-lg font-medium text-gray-700">
-              {ratingDescriptors[value]}
-            </span>
-          ) : (
-            <span className="text-lg text-gray-500">Rating</span>
-          )}
+          {/* Descriptor removed per request */}
         </div>
       </div>
     );
   };
 
   // Rating Scale Component
-  const RatingScale = ({ label, value, onChange }) => {
+  const RatingScale = ({ label, value, onChange, isFirst = false, displayTitle }) => {
     const ratingDescriptors = {
       length: {
         1: "Tiny",
@@ -634,27 +653,35 @@ export default function PostForm() {
     };
 
     return (
-      <div className="bg-white/60 backdrop-blur-sm rounded-md border border-white/50 h-[60px]">
-        <div className="flex items-center h-full gap-1 sm:gap-2 px-2 sm:px-4">
-          <span className="text-base text-gray-500 w-20 sm:w-24">{label}</span>
-          <div className="flex gap-0.5 sm:gap-1.5 flex-1">
-            {[1, 2, 3, 4, 5].map((num) => (
-              <button
-                key={num}
-                type="button"
-                onClick={() => handleClick(num)}
-                className={`w-full h-8 rounded-lg flex items-center justify-center text-sm font-medium transition-colors
-                  ${value === num 
-                    ? 'text-white' 
-                    : 'bg-white text-gray-700'
-                  }`}
-                style={value === num ? { backgroundColor: 'var(--yellow-custom)' } : {}}
-              />
-            ))}
+      <div>
+        <h3 className={`text-lg font-bold mb-0 px-4 sm:px-6 font-baloo2 ${isFirst ? 'pt-4' : ''}`}>{displayTitle || label}</h3>
+        <div className="relative h-[60px]">
+          <div className="absolute inset-x-0 top-0 bottom-0 flex items-center pl-4 sm:pl-6 pr-4 sm:pr-6">
+            <div className="flex items-center gap-2 flex-1">
+              {[1, 2, 3, 4, 5].map((num) => (
+                <button
+                  key={num}
+                  type="button"
+                  onClick={() => handleClick(num)}
+                  className="focus:outline-none"
+                >
+                  <div
+                    className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium transition-colors
+                      ${value === num 
+                        ? 'text-white' 
+                        : 'bg-gray-100 text-gray-700'
+                      }`}
+                    style={value === num ? { backgroundColor: 'var(--blue-custom)' } : {}}
+                  />
+                </button>
+              ))}
+            </div>
+            {value > 0 && (
+              <span className="text-lg font-medium text-black ml-4 text-right font-baloo2 uppercase whitespace-nowrap">
+                {ratingDescriptors[label.toLowerCase()][value]}
+              </span>
+            )}
           </div>
-          <span className="text-base font-medium text-gray-700 w-20 sm:w-24 text-right">
-            {value > 0 ? ratingDescriptors[label.toLowerCase()][value] : ''}
-          </span>
         </div>
       </div>
     );
@@ -664,10 +691,22 @@ export default function PostForm() {
   useEffect(() => {
     if (!showSuggestions) return;
     function handleClickOutside(event) {
-      if (
-        tagInputContainerRef.current &&
-        !tagInputContainerRef.current.contains(event.target)
-      ) {
+      if (!tagInputContainerRef.current) return;
+      
+      const clickedElement = event.target;
+      const container = tagInputContainerRef.current;
+      
+      // Check if click is on the title (h3 element) or its children
+      const title = container.querySelector('h3');
+      const clickedOnTitle = title && (title === clickedElement || title.contains(clickedElement));
+      
+      // Check if click is inside the input field or dropdown
+      const isInsideInput = container.querySelector('input') === clickedElement || 
+                           container.querySelector('input')?.contains(clickedElement);
+      const isInsideDropdown = container.querySelector('[class*="absolute z-20"]')?.contains(clickedElement);
+      
+      // Close if clicked outside container, or on title, but not if clicked on input or dropdown
+      if (!container.contains(clickedElement) || (clickedOnTitle && !isInsideInput && !isInsideDropdown)) {
         setShowSuggestions(false);
       }
     }
@@ -709,9 +748,147 @@ export default function PostForm() {
     }
   }, [user]);
 
+  // Function to check if form has any data
+  const hasFormData = () => {
+    return !!(
+      image ||
+      preview ||
+      formData.locationName ||
+      formData.menuName ||
+      formData.types.length > 0 ||
+      formData.description ||
+      formData.length ||
+      formData.thickness ||
+      formData.crispiness ||
+      formData.saltiness ||
+      formData.darkness ||
+      formData.overall
+    );
+  };
+
+  // Intercept navigation attempts
+  useEffect(() => {
+    if (formSubmitted || !hasFormData()) {
+      return;
+    }
+
+    const handleBeforeUnload = (e) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+
+    const handleRouteChangeStart = (url) => {
+      // Don't intercept if navigating to same page
+      if (url === router.asPath) {
+        return;
+      }
+
+      // Prevent navigation and show warning
+      window.history.pushState(null, '', router.asPath);
+      setPendingNavigation(url);
+      setShowNavigationWarning(true);
+      throw 'Navigation intercepted';
+    };
+
+    const handlePopState = (e) => {
+      if (hasFormData() && !formSubmitted) {
+        window.history.pushState(null, '', router.asPath);
+        setPendingNavigation(router.asPath);
+        setShowNavigationWarning(true);
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.history.pushState(null, '', router.asPath);
+    window.addEventListener('popstate', handlePopState);
+    router.events.on('routeChangeStart', handleRouteChangeStart);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('popstate', handlePopState);
+      router.events.off('routeChangeStart', handleRouteChangeStart);
+    };
+  }, [router, formSubmitted, image, preview, formData]);
+
+  const handleNavigationConfirm = () => {
+    setShowNavigationWarning(false);
+    setFormSubmitted(true); // Prevent further warnings
+    if (pendingNavigation) {
+      router.push(pendingNavigation);
+      setPendingNavigation(null);
+    }
+  };
+
+  const handleNavigationCancel = () => {
+    setShowNavigationWarning(false);
+    setPendingNavigation(null);
+  };
+
+  const handleDiscard = () => {
+    // Clear all form data
+    setImage(null);
+    setPreview('');
+    setFormData({
+      locationName: '',
+      menuName: '',
+      types: [],
+      description: '',
+      length: 0,
+      thickness: 0,
+      crispiness: 0,
+      saltiness: 0,
+      darkness: 0,
+      overall: 0
+    });
+    setError('');
+    setFormSubmitted(true);
+    // Navigate to home
+    router.push('/');
+  };
+
   return (
     <form onSubmit={handleSubmit} className="max-w-2xl mx-auto p-0 sm:p-6" noValidate>
-      <MessageAlert type="error" message={error} className="mb-4" />
+      <MessageAlert 
+        type="error" 
+        message={error} 
+        className="mb-4" 
+        onOutsideClick={() => setError('')} 
+      />
+
+      {/* Navigation Warning Modal */}
+      {showNavigationWarning && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 relative" style={{ borderWidth: '3px', borderStyle: 'solid', borderColor: 'black' }}>
+            <button
+              onClick={handleNavigationCancel}
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition-colors"
+              aria-label="Close"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            <h3 className="text-4xl font-bold mb-3 font-rouge-script" style={{ color: 'black' }}>You sure?</h3>
+            <p className="text-lg mb-6 font-baloo2 text-gray-700">
+              If you leave now, your review details will be gone. Want to finish your masterpiece first?
+            </p>
+            <div className="flex flex-col gap-3">
+                    <PrimaryButton
+                      onClick={handleNavigationCancel}
+                      className="w-full"
+                    >
+                      Complete review
+                    </PrimaryButton>
+              <SecondaryButton
+                onClick={handleNavigationConfirm}
+                className="w-full"
+              >
+                Leave anyway
+              </SecondaryButton>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Anonymous Post Warning Modal */}
       {showAnonymousWarning && (
@@ -794,22 +971,29 @@ export default function PostForm() {
                 )}
               </div>
             </div>
-            <button
-              onClick={handleNext}
-              disabled={!preview}
-              className="mt-8 w-full max-w-md text-white py-4 px-6 rounded-md text-lg font-semibold disabled:opacity-50"
-              style={{ backgroundColor: 'var(--yellow-custom)' }}
-            >
-              Rate
-            </button>
+            <PrimaryButton onClick={handleNext} disabled={!preview} className="mt-8">Rate</PrimaryButton>
           </div>
         )}
 
         {currentPage === 2 && (
-          <div className="space-y-1.5">
-            <div className="relative bg-white/60 backdrop-blur-sm rounded-md border border-white/50 h-[60px]">
-              <div className="absolute inset-0 flex items-center justify-between px-4">
-                <div className="flex items-center gap-1">
+          <div className="space-y-0">
+            <div 
+              className="rounded-t-xl rounded-b-none"
+              style={{ borderWidth: '3px', borderStyle: 'solid', borderColor: 'black', backgroundColor: 'var(--light-blue-custom)', borderBottom: 'none' }}
+            >
+              <div className="p-4 sm:p-6">
+                <h1 className="text-4xl font-bold font-rouge-script" style={{ color: 'var(--yellow-custom)' }}>1 - The Gist</h1>
+              </div>
+            </div>
+            <div className="bg-white rounded-b-xl rounded-t-none" style={{ borderWidth: '3px', borderStyle: 'solid', borderColor: 'black' }}>
+              <div className="p-0">
+            {/* Overall rating moved to top and simplified styling */}
+            <h3 className="text-lg font-bold mb-0 px-4 sm:px-6 font-baloo2 pt-4 pb-0">Overall Rating *</h3>
+            {/* Container: pt-2 (8px top), pb-2 (8px bottom), h-[60px] total height */}
+            <div className="relative h-[60px]">
+                  {/* Inner padding: pl-4 (16px left), pr-0 (no right padding) */}
+                  <div className="absolute inset-x-0 top-0 bottom-0 flex items-center justify-start pl-4 pr-0">
+                    <div className="flex items-center gap-0">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <button
                       key={star}
@@ -817,9 +1001,11 @@ export default function PostForm() {
                       onClick={() => updateFormData({ overall: star })}
                       className="focus:outline-none"
                     >
-                      <svg
-                        className={`w-10 h-10 ${star <= formData.overall ? '' : 'text-white'}`}
-                        fill="currentColor"
+                          <svg
+                            className={`w-12 h-12`}
+                            fill={star <= formData.overall ? "currentColor" : "white"}
+                            stroke={star <= formData.overall ? "none" : "black"}
+                            strokeWidth={star <= formData.overall ? undefined : 1}
                         viewBox="0 0 20 20"
                         style={star <= formData.overall ? { color: 'var(--yellow-custom)' } : {}}
                       >
@@ -828,44 +1014,38 @@ export default function PostForm() {
                     </button>
                   ))}
                 </div>
-                {formData.overall > 0 && (
-                  <span className="text-base font-medium text-gray-700">
-                    {ratingDescriptors[formData.overall]}
-                  </span>
-                )}
+                {/* Descriptor removed per request */}
               </div>
             </div>
+            <div className="relative mt-0">
+              <div className="w-full h-[3px] bg-black mb-3"></div>
+              <h3 className="text-lg font-bold mb-0 px-4 sm:px-6 font-baloo2">Location *</h3>
+              {LocationInput}
+            </div>
+            <div className="relative mt-4">
+              <h3 className="text-lg font-bold mb-0 px-4 sm:px-6 font-baloo2">Name on Menu (if applicable)</h3>
+              <div className="relative h-[60px]">
+                <input
+                  key="menu-name-input"
+                  type="text"
+                  value={formData.menuName}
+                  onChange={handleMenuNameChange}
+                  className="w-full h-full p-4 text-base bg-transparent outline-none"
+                  placeholder="Enter"
+                />
+              </div>
+              <div className="w-full h-[3px] bg-black"></div>
+            </div>
 
-            {LocationInput}
-
-            <div className="relative">
+            <div className="relative mt-4 px-4 sm:px-6">
               <div ref={tagInputContainerRef}>
-                <div className="relative bg-white/60 backdrop-blur-sm rounded-md border border-white/50 h-[60px]">
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none z-10">
-                    <svg className="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                    </svg>
-                  </div>
-                  <div className="p-4 pl-12 h-full">
-                    <div className="flex flex-wrap gap-2 items-center h-full">
-                      {formData.types.map(type => {
-                        const typeInfo = allFryTypes.find(t => t.value === type);
-                        return (
-                          <span
-                            key={type}
-                            className="inline-flex items-center px-3 py-1 text-sm bg-white/60 backdrop-blur-sm text-gray-700 rounded-full border border-gray-400"
-                          >
-                            {typeInfo?.label}
-                            <button
-                              type="button"
-                              onClick={() => removeTag(type)}
-                              className="ml-1 text-gray-500 hover:text-gray-700"
-                            >
-                              ×
-                            </button>
-                          </span>
-                        );
-                      })}
+                <h3 className="text-lg font-bold mb-2 font-baloo2">Category *</h3>
+                {showMaxLimitError && (
+                  <p className="text-sm text-gray-600 mb-2">Can't add more than 4 categories</p>
+                )}
+                <div className="relative bg-white rounded-full h-[60px]" style={{ borderWidth: '3px', borderStyle: 'solid', borderColor: '#9CA3AF' }}>
+                  <div className="p-4 h-full">
+                    <div className="flex items-center h-full">
                       <input
                         key="tag-input"
                         ref={tagInputRef}
@@ -875,152 +1055,202 @@ export default function PostForm() {
                         onKeyDown={handleKeyDown}
                         onFocus={() => {
                           if (!tagInput) {
-                            const filtered = allFryTypes.filter(type => !formData.types.includes(type.value));
+                            const filtered = allFryTypes
+                              .filter(type => !formData.types.includes(type.value))
+                              .sort((a, b) => a.label.localeCompare(b.label));
                             setSuggestions(filtered);
                           }
                           setShowSuggestions(true);
                         }}
                         className="flex-1 min-w-[150px] outline-none text-base bg-transparent"
-                        placeholder={formData.types.length === 0 ? "Type of fries" : ""}
+                        placeholder={"Type to search"}
                       />
                     </div>
                   </div>
                 </div>
                 {showSuggestions && suggestions.length > 0 && (
-                  <div className="absolute z-20 w-full mt-1.5 bg-white/60 backdrop-blur-sm border border-white/50 rounded-md">
+                  <div className="absolute z-20 left-4 sm:left-6 w-80 max-w-full mt-1.5 bg-white rounded-md" style={{ borderWidth: '3px', borderStyle: 'solid', borderColor: 'black' }}>
                     {suggestions.map((type) => (
                       <div
                         key={type.value}
                         onClick={() => addTag(type)}
-                        className="flex items-center px-4 py-2 hover:bg-white/50 cursor-pointer text-base border-b border-white/30 last:border-b-0"
+                        className="flex items-center px-4 py-3 hover:bg-white/50 cursor-pointer text-base border-b border-gray-300 last:border-b-0"
                       >
-                        <svg className="w-4 h-4 text-gray-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                        </svg>
                         {type.label}
                       </div>
                     ))}
                   </div>
                 )}
               </div>
-              <div className="mt-1.5">
-                <div className="flex flex-wrap gap-1.5">
-                  {allFryTypes.slice(0, 4).map((type) => {
-                    const isSelected = formData.types.includes(type.value);
-                    return (
-                      <button
-                        key={type.value}
-                        type="button"
-                        onClick={() => !isSelected && addTag(type)}
-                        disabled={isSelected}
-                        className={`inline-flex items-center px-3 py-1 text-sm rounded-full border border-gray-400 backdrop-blur-sm
-                          ${isSelected
-                            ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                            : 'text-gray-700 hover:bg-gray-100'}
-                        `}
-                      >
-                        <svg className={`w-3 h-3 mr-1 ${isSelected ? 'text-gray-400' : 'text-gray-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                        </svg>
-                        {type.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+              {/* Selected tags displayed below search bar */}
+              {formData.types.length > 0 && (
+                <>
+                  <div className="mt-3 flex flex-wrap gap-2 mb-2">
+                    {formData.types.map(type => {
+                      const typeInfo = allFryTypes.find(t => t.value === type);
+                      return (
+                        <span
+                          key={type}
+                          className="inline-flex items-center px-4 py-2 text-base rounded-full"
+                          style={{ backgroundColor: 'var(--red-custom)', color: 'var(--yellow-custom)', borderWidth: '3px', borderStyle: 'solid', borderColor: 'var(--red-custom)' }}
+                        >
+                          {typeInfo?.label}
+                          <button
+                            type="button"
+                            onClick={() => removeTag(type)}
+                            className="ml-3"
+                            style={{ color: 'var(--yellow-custom)' }}
+                            aria-label="Remove type"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+              {/* Removed suggested quick tags below the search bar per request */}
             </div>
 
-            <div className="relative bg-white/60 backdrop-blur-sm rounded-md border border-white/50 h-[60px]">
-              <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                <svg className="w-5 h-5 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
+            
+            
+            <div className="mt-2 px-4 sm:px-6 pb-6">
+              <div className="flex flex-col gap-3">
+                <PrimaryButton onClick={handleNext} className="mt-4 w-full block">Add some details</PrimaryButton>
+                <TertiaryButton onClick={handleDiscard} className="w-full">Discard</TertiaryButton>
               </div>
-              <input
-                key="menu-name-input"
-                type="text"
-                value={formData.menuName}
-                onChange={handleMenuNameChange}
-                className="w-full h-full p-4 pl-12 text-base bg-transparent outline-none"
-                placeholder="Name on Menu (Optional)"
-              />
             </div>
-
-            <div className="flex gap-4 mt-4">
-              <button
-                type="button"
-                onClick={handleNext}
-                className="w-full text-white py-4 px-6 rounded-md text-lg font-semibold"
-                style={{ backgroundColor: 'var(--yellow-custom)' }}
-              >
-                Next
-              </button>
+              </div>
             </div>
           </div>
         )}
 
         {currentPage === 3 && (
-          <div className="space-y-6">
-            <h2 className="text-xl font-medium text-gray-800 mb-4">
-              Want to provide some additional details?
-            </h2>
-            <div className="space-y-1.5">
-              <RatingScale
-                label="Length"
-                value={formData.length}
-                onChange={(value) => updateFormData({ length: value })}
-              />
-
-              <RatingScale
-                label="Thickness"
-                value={formData.thickness}
-                onChange={(value) => updateFormData({ thickness: value })}
-              />
-
-              <RatingScale
-                label="Crispiness"
-                value={formData.crispiness}
-                onChange={(value) => updateFormData({ crispiness: value })}
-              />
-
-              <RatingScale
-                label="Saltiness"
-                value={formData.saltiness}
-                onChange={(value) => updateFormData({ saltiness: value })}
-              />
-
-              <RatingScale
-                label="Darkness"
-                value={formData.darkness}
-                onChange={(value) => updateFormData({ darkness: value })}
-              />
+          <div className="space-y-0">
+            <div 
+              className="rounded-t-xl rounded-b-none"
+              style={{ borderWidth: '3px', borderStyle: 'solid', borderColor: 'black', backgroundColor: 'var(--light-blue-custom)', borderBottom: 'none' }}
+            >
+              <div className="p-4 sm:p-6">
+                <h1 className="text-4xl font-bold font-rouge-script" style={{ color: 'var(--yellow-custom)' }}>2 - The Details</h1>
+              </div>
             </div>
+            <div className="bg-white rounded-b-xl rounded-t-none" style={{ borderWidth: '3px', borderStyle: 'solid', borderColor: 'black' }}>
+              <div className="p-0">
+                <div>
+                  <RatingScale
+                    label="Length"
+                    value={formData.length}
+                    onChange={(value) => updateFormData({ length: value })}
+                    isFirst={true}
+                  />
+                  <div className="w-full h-[3px] bg-black"></div>
+                </div>
 
-            <div className="relative bg-white/60 backdrop-blur-sm rounded-md border border-white/50">
-              <textarea
-                value={formData.description}
-                onChange={handleDescriptionChange}
-                className="w-full p-4 text-base bg-transparent outline-none"
-                rows="4"
-                placeholder="Tell us more!"
-              />
+                <div className="mt-4">
+                  <RatingScale
+                    label="Thickness"
+                    value={formData.thickness}
+                    onChange={(value) => updateFormData({ thickness: value })}
+                  />
+                  <div className="w-full h-[3px] bg-black"></div>
+                </div>
+
+                <div className="mt-4">
+                  <RatingScale
+                    label="Crispiness"
+                    value={formData.crispiness}
+                    onChange={(value) => updateFormData({ crispiness: value })}
+                  />
+                  <div className="w-full h-[3px] bg-black"></div>
+                </div>
+
+                <div className="mt-4">
+                  <RatingScale
+                    label="Saltiness"
+                    value={formData.saltiness}
+                    onChange={(value) => updateFormData({ saltiness: value })}
+                  />
+                  <div className="w-full h-[3px] bg-black"></div>
+                </div>
+
+                <div className="mt-4">
+                  <RatingScale
+                    label="Darkness"
+                    displayTitle="Color"
+                    value={formData.darkness}
+                    onChange={(value) => updateFormData({ darkness: value })}
+                  />
+                </div>
+
+                <div className="mt-2 px-4 sm:px-6 pb-6">
+                  <div className="flex flex-col gap-3">
+                    <PrimaryButton 
+                      onClick={handleNext} 
+                      className="mt-4 w-full block"
+                    >
+                      {formData.length || formData.thickness || formData.crispiness || formData.saltiness || formData.darkness ? 'Next' : 'Skip'}
+                    </PrimaryButton>
+                    <TertiaryButton 
+                      onClick={handleBack} 
+                      className="w-full"
+                    >
+                      Go Back
+                    </TertiaryButton>
+                  </div>
+                </div>
+              </div>
             </div>
+          </div>
+        )}
+        {currentPage === 4 && (
+          <div className="space-y-0">
+            <div 
+              className="rounded-t-xl rounded-b-none"
+              style={{ borderWidth: '3px', borderStyle: 'solid', borderColor: 'black', backgroundColor: 'var(--light-blue-custom)', borderBottom: 'none' }}
+            >
+              <div className="p-4 sm:p-6">
+                <h1 className="text-4xl font-bold font-rouge-script" style={{ color: 'var(--yellow-custom)' }}>3 - The Finishing Touch</h1>
+              </div>
+            </div>
+            <div className="bg-white rounded-b-xl rounded-t-none" style={{ borderWidth: '3px', borderStyle: 'solid', borderColor: 'black' }}>
+              <div className="p-0">
+                <h3 className="text-lg font-bold mb-0 px-4 sm:px-6 font-baloo2 pt-4">Spill The Tea...</h3>
+                <div className="relative bg-white rounded-md mx-4 sm:mx-6 mt-2" style={{ borderWidth: '3px', borderStyle: 'solid', borderColor: 'black' }}>
+                  <textarea
+                    value={formData.description}
+                    onChange={handleDescriptionChange}
+                    className="w-full p-4 text-base bg-transparent outline-none"
+                    rows="8"
+                    placeholder="Highly encouraged!"
+                  />
+                </div>
 
-            <div className="flex gap-4 mt-8">
-              <button
-                type="button"
-                onClick={handleSubmit}
-                disabled={loading}
-                className="w-full text-white py-4 px-6 rounded-md text-lg font-semibold"
-                style={{ backgroundColor: 'var(--yellow-custom)' }}
-              >
-                {loading ? 'Submitting...' : (
-                  formData.length || formData.thickness || formData.crispiness || 
-                  formData.saltiness || formData.darkness || formData.description
-                    ? 'Submit'
-                    : 'Submit without details'
-                )}
-              </button>
+                <div className="mt-4 px-4 sm:px-6 pb-6">
+                  <div className="flex flex-col gap-3">
+                    <PrimaryButton
+                      type="button"
+                      onClick={handleSubmit}
+                      disabled={loading}
+                      className="mt-4 w-full block"
+                    >
+                      {loading ? 'Submitting...' : (
+                        formData.length || formData.thickness || formData.crispiness || 
+                        formData.saltiness || formData.darkness || formData.description
+                          ? 'Submit'
+                          : 'Submit without details'
+                      )}
+                    </PrimaryButton>
+                    <TertiaryButton 
+                      onClick={handleBack} 
+                      className="w-full"
+                    >
+                      Go Back
+                    </TertiaryButton>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}
