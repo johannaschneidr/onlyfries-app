@@ -1,10 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, fetchSignInMethodsForEmail } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../../lib/firebase';
 import Navbar from '../../components/navbar';
 import MessageAlert from '../../components/MessageAlert';
+import PrimaryButton from '../../components/PrimaryButton';
+import SecondaryButton from '../../components/SecondaryButton';
 
 export default function Verify() {
   const [password, setPassword] = useState('');
@@ -13,6 +15,8 @@ export default function Verify() {
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isChecking, setIsChecking] = useState(false);
+  const [usernameAvailability, setUsernameAvailability] = useState(null); // null = not checked, true = available, false = taken
   const router = useRouter();
   const { email, isNewUser: isNewUserParam, redirect } = router.query;
   const [isNewUser, setIsNewUser] = useState(isNewUserParam === 'true');
@@ -28,14 +32,63 @@ export default function Verify() {
     setIsNewUser(isNewUserParam === 'true');
   }, [email, isNewUserParam, router]);
 
-  const checkUsernameExists = async (username) => {
+  const checkUsernameExists = useCallback(async (username) => {
+    if (!username) return false;
     const usernameDoc = await getDoc(doc(db, 'usernames', username));
     return usernameDoc.exists();
-  };
+  }, []);
+
+  // Real-time validation check
+  useEffect(() => {
+    if (!isNewUser) return; // Only validate for new users
+
+    const validateUsername = async () => {
+      // Clear previous state
+      setUsernameAvailability(null);
+      setError('');
+
+      if (!username) {
+        return;
+      }
+
+      // Basic validation checks
+      if (username.length < 3 || username.length > 20) {
+        return;
+      }
+
+      if (!/^[a-z0-9]+$/.test(username)) {
+        return;
+      }
+
+      // Check if username exists
+      setIsChecking(true);
+      const exists = await checkUsernameExists(username);
+      setIsChecking(false);
+      setUsernameAvailability(!exists);
+      if (exists) {
+        setError('Username is already taken');
+      }
+    };
+
+    // Debounce the check
+    const timeoutId = setTimeout(() => {
+      validateUsername();
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [username, isNewUser, checkUsernameExists]);
 
   const generateRandomUsername = () => {
     const randomNum = Math.floor(Math.random() * 10000);
     return `frieslover${randomNum}`;
+  };
+
+  // Check if username is valid and available
+  const isUsernameValid = () => {
+    if (!username) return false;
+    if (username.length < 3 || username.length > 20) return false;
+    if (!/^[a-z0-9]+$/.test(username)) return false;
+    return usernameAvailability === true;
   };
 
   const handleAuth = async (e) => {
@@ -64,9 +117,11 @@ export default function Verify() {
         setError('Username can only contain lowercase letters and numbers');
         return;
       }
+      // Double-check username availability before submitting
       const usernameExists = await checkUsernameExists(username);
       if (usernameExists) {
         setError('Username is already taken');
+        setUsernameAvailability(false);
         return;
       }
       try {
@@ -114,13 +169,23 @@ export default function Verify() {
   return (
     <>
       <Navbar />
-      <div className="max-w-md mx-auto p-4">
-        <MessageAlert type="error" message={error} className="mb-4" />
-        <form onSubmit={handleAuth} className="space-y-6" noValidate>
+      <main className="max-w-md mx-auto p-4">
+        <div className="bg-white rounded-xl p-6"
+          style={{
+            borderWidth: '3px',
+            borderStyle: 'solid',
+            borderColor: 'black'
+          }}
+        >
+          <h1 className="text-4xl font-bold mb-3 font-rouge-script" style={{ color: 'var(--blue-custom)' }}>
+            {isNewUser ? 'Create your account' : 'Welcome back'}
+          </h1>
+          <MessageAlert type="error" message={error} className="mb-4 mt-6" />
+          <form onSubmit={handleAuth} className="space-y-6" noValidate>
           {isNewUser ? (
             <>
               <div>
-                <label htmlFor="username" className="block text-base font-medium text-gray-700 mb-2">
+                <label htmlFor="username" className="block text-lg font-medium text-gray-700 mb-2 font-baloo2">
                   Choose a username
                 </label>
                 <input
@@ -130,20 +195,20 @@ export default function Verify() {
                   autoComplete="username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value.toLowerCase())}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-base h-12 px-4"
-                  onFocus={(e) => e.target.style.borderColor = 'var(--yellow-custom)'}
-                  onBlur={(e) => e.target.style.borderColor = '#D1D5DB'}
+                  className="block w-full rounded-full border-2 border-gray-300 shadow-sm text-lg h-14 px-6 font-baloo2 focus:outline-none"
+                  style={{ borderColor: '#D1D5DB' }}
                   minLength={3}
                   maxLength={20}
                   pattern="[a-z0-9]+"
                   title="Username can only contain lowercase letters and numbers"
+                  placeholder="Enter your username"
                 />
-                <p className="mt-1 text-sm text-gray-500">
-                  Username must be 3-20 characters long and can only contain lowercase letters and numbers
+                <p className="mt-2 text-sm text-gray-600 font-baloo2">
+                  Username must be 3-20 characters and can only contain lowercase letters and numbers.
                 </p>
               </div>
               <div>
-                <label htmlFor="new-password" className="block text-base font-medium text-gray-700 mb-2">
+                <label htmlFor="new-password" className="block text-lg font-medium text-gray-700 mb-2 font-baloo2">
                   Set up your password
                 </label>
                 <div className="relative">
@@ -154,9 +219,8 @@ export default function Verify() {
                     autoComplete="new-password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-base h-12 px-4 pr-12"
-                    onFocus={(e) => e.target.style.borderColor = 'var(--yellow-custom)'}
-                    onBlur={(e) => e.target.style.borderColor = '#D1D5DB'}
+                    className="block w-full rounded-full border-2 border-gray-300 shadow-sm text-lg h-14 px-6 pr-14 font-baloo2 focus:outline-none"
+                    style={{ borderColor: '#D1D5DB' }}
                     placeholder="••••••••"
                     minLength={6}
                   />
@@ -179,7 +243,7 @@ export default function Verify() {
                 </div>
               </div>
               <div>
-                <label htmlFor="confirm-password" className="block text-base font-medium text-gray-700 mb-2">
+                <label htmlFor="confirm-password" className="block text-lg font-medium text-gray-700 mb-2 font-baloo2">
                   Confirm your password
                 </label>
                 <div className="relative">
@@ -190,9 +254,8 @@ export default function Verify() {
                     autoComplete="new-password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-base h-12 px-4 pr-12"
-                    onFocus={(e) => e.target.style.borderColor = 'var(--yellow-custom)'}
-                    onBlur={(e) => e.target.style.borderColor = '#D1D5DB'}
+                    className="block w-full rounded-full border-2 border-gray-300 shadow-sm text-lg h-14 px-6 pr-14 font-baloo2 focus:outline-none"
+                    style={{ borderColor: '#D1D5DB' }}
                     placeholder="••••••••"
                     minLength={6}
                   />
@@ -214,22 +277,27 @@ export default function Verify() {
                   </button>
                 </div>
               </div>
-              <button
-                type="submit"
-                className="mt-4 w-full text-white py-3 px-4 rounded-md shadow-sm text-sm font-medium rounded-md shadow-sm text-white focus:outline-none focus:ring-2 focus:ring-offset-2"
-                style={{ backgroundColor: 'var(--yellow-custom)' }}
-                onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--yellow-custom)'}
-                onMouseLeave={(e) => e.target.style.backgroundColor = 'var(--yellow-custom)'}
-                onFocus={(e) => e.target.style.boxShadow = '0 0 0 2px var(--yellow-custom)'}
-                onBlur={(e) => e.target.style.boxShadow = ''}
-              >
-                Create Account
-              </button>
+              <div className="flex flex-col gap-3 mt-6">
+                <PrimaryButton
+                  type="submit"
+                  className="w-full"
+                  disabled={!isUsernameValid() || isChecking}
+                >
+                  Create Account
+                </PrimaryButton>
+                <SecondaryButton
+                  type="button"
+                  onClick={() => router.push('/login')}
+                  className="w-full"
+                >
+                  Cancel
+                </SecondaryButton>
+              </div>
             </>
           ) : (
             <>
               <div>
-                <label htmlFor="current-password" className="block text-lg font-medium text-gray-700 mb-2">
+                <label htmlFor="current-password" className="block text-lg font-medium text-gray-700 mb-2 font-baloo2">
                   Enter your password
                 </label>
                 <div className="relative">
@@ -240,9 +308,8 @@ export default function Verify() {
                     autoComplete="current-password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-base h-12 px-4 pr-12"
-                    onFocus={(e) => e.target.style.borderColor = 'var(--yellow-custom)'}
-                    onBlur={(e) => e.target.style.borderColor = '#D1D5DB'}
+                    className="block w-full rounded-full border-2 border-gray-300 shadow-sm text-lg h-14 px-6 pr-14 font-baloo2 focus:outline-none"
+                    style={{ borderColor: '#D1D5DB' }}
                     placeholder="••••••••"
                   />
                   <button
@@ -262,37 +329,40 @@ export default function Verify() {
                     )}
                   </button>
                 </div>
-                <div className="mt-2 text-left">
+                <div className="mt-3 text-left">
                   <button
                     type="button"
                     onClick={() => router.push({
                       pathname: '/auth/reset-password',
                       query: { email }
                     })}
-                    className="text-sm"
-                    style={{ color: 'var(--yellow-custom)' }}
-                    onMouseEnter={(e) => e.target.style.color = 'var(--yellow-custom)'}
-                    onMouseLeave={(e) => e.target.style.color = 'var(--yellow-custom)'}
+                    className="text-sm font-baloo2 hover:underline"
+                    style={{ color: 'var(--red-custom)' }}
                   >
                     Forgot password?
                   </button>
                 </div>
               </div>
-              <button
-                type="submit"
-                className="mt-4 w-full text-white py-3 px-4 rounded-md shadow-sm text-sm font-medium rounded-md shadow-sm text-white focus:outline-none focus:ring-2 focus:ring-offset-2"
-                style={{ backgroundColor: 'var(--yellow-custom)' }}
-                onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--yellow-custom)'}
-                onMouseLeave={(e) => e.target.style.backgroundColor = 'var(--yellow-custom)'}
-                onFocus={(e) => e.target.style.boxShadow = '0 0 0 2px var(--yellow-custom)'}
-                onBlur={(e) => e.target.style.boxShadow = ''}
-              >
-                Continue
-              </button>
+              <div className="flex flex-col gap-3 mt-6">
+                <PrimaryButton
+                  type="submit"
+                  className="w-full"
+                >
+                  Continue
+                </PrimaryButton>
+                <SecondaryButton
+                  type="button"
+                  onClick={() => router.push('/login')}
+                  className="w-full"
+                >
+                  Cancel
+                </SecondaryButton>
+              </div>
             </>
           )}
         </form>
-      </div>
+        </div>
+      </main>
     </>
   );
 } 

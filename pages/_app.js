@@ -1,4 +1,5 @@
 import { AuthProvider } from '../contexts/AuthContext';
+import UsernameGuard from '../components/UsernameGuard';
 import '../global.css'
 import Script from 'next/script'
 import { Baloo_2, Rouge_Script, Quattrocento } from 'next/font/google'
@@ -39,13 +40,15 @@ const quattrocento = Quattrocento({
 function MyApp({ Component, pageProps }) {
   return (
     <AuthProvider>
-      <div className={`min-h-screen ${baloo2.variable} ${rougeScript.variable} ${quattrocento.variable}`}>
-        <Script
-          src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`}
-          strategy="beforeInteractive"
-        />
-        <Component {...pageProps} />
-      </div>
+      <UsernameGuard>
+        <div className={`min-h-screen ${baloo2.variable} ${rougeScript.variable} ${quattrocento.variable}`}>
+          <Script
+            src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`}
+            strategy="beforeInteractive"
+          />
+          <Component {...pageProps} />
+        </div>
+      </UsernameGuard>
     </AuthProvider>
   )
 }
