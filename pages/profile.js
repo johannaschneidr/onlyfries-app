@@ -2,10 +2,12 @@ import { useState } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '../contexts/AuthContext';
 import { signOut, updateProfile } from 'firebase/auth';
-import { doc, setDoc, getDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, setDoc, getDoc, updateDoc, deleteDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 import Navbar from '../components/navbar';
 import MessageAlert from '../components/MessageAlert';
+import PrimaryButton from '../components/PrimaryButton';
+import SecondaryButton from '../components/SecondaryButton';
 
 export default function Profile() {
   const { user } = useAuth();
@@ -90,65 +92,63 @@ export default function Profile() {
   return (
     <>
       <Navbar />
-      <div className="max-w-md mx-auto p-4">
-        <h1 className="text-2xl font-bold mb-4 font-rouge-script" style={{ color: 'var(--yellow-custom)' }}>Profile</h1>
-        <MessageAlert type="error" message={error} className="mb-4" />
-        <MessageAlert type="success" message={success} className="mb-4" />
-        
-        <div className="bg-white/65 backdrop-blur-sm rounded-xl border border-white/50 p-6 mb-6">
-          <div className="space-y-4">
+      <main className="max-w-md mx-auto p-4">
+        <div className="bg-white rounded-xl p-6"
+          style={{
+            borderWidth: '3px',
+            borderStyle: 'solid',
+            borderColor: 'black'
+          }}
+        >
+          <h1 className="text-4xl font-bold mb-3 font-rouge-script" style={{ color: 'var(--blue-custom)' }}>Profile Settings</h1>
+          <MessageAlert type="error" message={error} className="mb-4 mt-6" />
+          <MessageAlert type="success" message={success} className="mb-4" />
+          
+          <div className="space-y-6 mt-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 font-baloo2">Username</label>
+              <label className="block text-lg font-medium text-gray-700 mb-2 font-baloo2">Username</label>
               {isEditingUsername ? (
-                <form onSubmit={handleUsernameUpdate} className="mt-1 space-y-2">
-                  <div className="flex rounded-md shadow-sm">
-                    <input
-                      type="text"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value.toLowerCase())}
-                      className="flex-1 block w-full rounded-md border-gray-300 shadow-sm text-base h-12 px-4 font-baloo2"
-                      onFocus={(e) => e.target.style.borderColor = 'var(--yellow-custom)'}
-                      onBlur={(e) => e.target.style.borderColor = '#D1D5DB'}
-                      minLength={3}
-                      maxLength={20}
-                      pattern="[a-z0-9]+"
-                      title="Username can only contain lowercase letters and numbers"
-                    />
-                    <button
+                <form onSubmit={handleUsernameUpdate} className="space-y-3">
+                  <input
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value.toLowerCase())}
+                    className="block w-full rounded-full border-2 border-gray-300 shadow-sm text-lg h-14 px-6 font-baloo2 focus:outline-none"
+                    style={{ borderColor: '#D1D5DB' }}
+                    minLength={3}
+                    maxLength={20}
+                    pattern="[a-z0-9]+"
+                    title="Username can only contain lowercase letters and numbers"
+                  />
+                  <p className="mt-2 text-sm text-gray-600 font-baloo2">
+                    Username must be 3-20 characters long and can only contain lowercase letters and numbers
+                  </p>
+                  <div className="flex flex-col gap-3 mt-6">
+                    <PrimaryButton
                       type="submit"
-                      className="mt-4 w-full text-white py-3 px-4 rounded-md shadow-sm text-sm font-medium rounded-md shadow-sm text-white focus:outline-none focus:ring-2 focus:ring-offset-2 font-baloo2"
-                      style={{ backgroundColor: 'var(--yellow-custom)' }}
-                      onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--yellow-custom)'}
-                      onMouseLeave={(e) => e.target.style.backgroundColor = 'var(--yellow-custom)'}
-                      onFocus={(e) => e.target.style.boxShadow = '0 0 0 2px var(--yellow-custom)'}
-                      onBlur={(e) => e.target.style.boxShadow = ''}
+                      className="w-full"
                     >
                       Save
-                    </button>
-                    <button
+                    </PrimaryButton>
+                    <SecondaryButton
                       type="button"
                       onClick={() => {
                         setIsEditingUsername(false);
                         setUsername(user.displayName || '');
                         setError('');
                       }}
-                      className="ml-2 inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 font-baloo2"
+                      className="w-full"
                     >
                       Cancel
-                    </button>
+                    </SecondaryButton>
                   </div>
-                  <p className="text-sm text-gray-500 font-baloo2">
-                    Username must be 3-20 characters long and can only contain lowercase letters and numbers
-                  </p>
                 </form>
               ) : (
-                <div className="mt-1 flex items-center">
+                <div className="mt-1 flex items-center justify-between">
                   <p className="text-lg font-baloo2">{user.displayName}</p>
                   <button
                     onClick={() => setIsEditingUsername(true)}
-                    className="ml-2 p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2"
-                    onFocus={(e) => e.target.style.boxShadow = '0 0 0 2px var(--yellow-custom)'}
-                    onBlur={(e) => e.target.style.boxShadow = ''}
+                    className="p-2 rounded-full hover:bg-gray-100 focus:outline-none transition-colors"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -156,7 +156,7 @@ export default function Profile() {
                       viewBox="0 0 24 24"
                       strokeWidth={1.5}
                       stroke="currentColor"
-                      className="w-5 h-5 text-gray-500"
+                      className="w-6 h-6 text-gray-500"
                     >
                       <path
                         strokeLinecap="round"
@@ -170,21 +170,19 @@ export default function Profile() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 font-baloo2">Email</label>
+              <label className="block text-lg font-medium text-gray-700 mb-2 font-baloo2">Email</label>
               <div className="mt-1">
                 <p className="text-lg font-baloo2">{user.email}</p>
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 font-baloo2">Password</label>
+              <label className="block text-lg font-medium text-gray-700 mb-2 font-baloo2">Password</label>
               <div className="mt-1 flex items-center justify-between">
                 <p className="text-lg font-baloo2">••••••••</p>
                 <button
                   onClick={() => router.push('/profile/change-password')}
-                  className="p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2"
-                  onFocus={(e) => e.target.style.boxShadow = '0 0 0 2px var(--yellow-custom)'}
-                  onBlur={(e) => e.target.style.boxShadow = ''}
+                  className="p-2 rounded-full hover:bg-gray-100 focus:outline-none transition-colors"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -192,7 +190,7 @@ export default function Profile() {
                     viewBox="0 0 24 24"
                     strokeWidth={1.5}
                     stroke="currentColor"
-                    className="w-5 h-5 text-gray-500"
+                    className="w-6 h-6 text-gray-500"
                   >
                     <path
                       strokeLinecap="round"
@@ -204,24 +202,33 @@ export default function Profile() {
               </div>
             </div>
           </div>
-        </div>
 
-        <div className="space-y-4">
-          <button
-            onClick={handleLogout}
-            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-500 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 font-baloo2"
-          >
-            Log Out
-          </button>
+          <div className="mt-8 flex flex-col gap-3">
+            <SecondaryButton
+              onClick={handleLogout}
+              className="w-full"
+            >
+              Log Out
+            </SecondaryButton>
 
-          <button
-            onClick={() => router.push('/profile/delete-account')}
-            className="w-full flex justify-center py-2 px-4 border border-red-600 rounded-md shadow-sm text-sm font-medium text-red-600 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 font-baloo2"
-          >
-            Delete Account
-          </button>
+            <button
+              onClick={() => router.push('/profile/delete-account')}
+              className="inline-block px-10 py-2 rounded-full mt-0 w-full"
+              style={{
+                borderWidth: '3px',
+                borderStyle: 'solid',
+                borderColor: 'black',
+                backgroundColor: 'var(--red-custom)',
+                color: 'var(--yellow-custom)'
+              }}
+            >
+              <span className="text-2xl font-medium font-quattrocento underline whitespace-nowrap">
+                Delete Account
+              </span>
+            </button>
+          </div>
         </div>
-      </div>
+      </main>
     </>
   );
 } 
