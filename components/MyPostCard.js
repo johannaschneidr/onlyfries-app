@@ -120,17 +120,18 @@ export default function MyPostCard({ post }) {
   };
 
   const renderStars = (rating) => {
-    return Array(5).fill(0).map((_, index) => (
-      <svg
-        key={index}
-        className={`w-10 h-10 ${index < rating ? '' : 'text-gray-300'} -mr-1`}
-        style={index < rating ? { color: 'var(--yellow-custom)' } : {}}
-        fill="currentColor"
-        viewBox="0 0 20 20"
-      >
-        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-      </svg>
-    ));
+    return (
+      <div className="relative w-14 h-14">
+        <img
+          src="/assets/Star.png"
+          alt="Star"
+          className="w-14 h-14"
+        />
+        <div className="absolute inset-0 flex items-center justify-center pt-1">
+          <span className="text-2xl font-bold text-black font-baloo2">{Math.round(rating)}</span>
+        </div>
+      </div>
+    );
   };
 
   const getEstablishmentName = (location) => {
@@ -199,77 +200,69 @@ export default function MyPostCard({ post }) {
 
   return (
     <>
-    <div className="border rounded-xl overflow-hidden bg-white/65 backdrop-blur-sm">
-      <div className="p-4">
-        <div className="relative">
+    <div className="overflow-hidden bg-white rounded-xl" style={{ borderWidth: '3px', borderStyle: 'solid', borderColor: 'black' }}>
+      <div className="px-4 pb-4 pt-0">
+        <div className="relative rounded-xl overflow-hidden border-black mt-4" style={{ borderWidth: '3px', borderStyle: 'solid' }}>
           <img 
             src={post.imageUrl} 
             alt={post.locationName}
-            className="w-full h-64 object-cover rounded-lg"
+            className="w-full h-64 object-cover"
           />
             <div className="absolute top-2 right-2">
-              <div className="relative" ref={menuRef}>
-                <button
-                  onClick={() => setShowMenu(!showMenu)}
-                  className="p-2 bg-black/30 hover:bg-black/50 rounded-full transition-colors"
-                >
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-                  </svg>
-                </button>
-                {showMenu && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
-                    <button
-                      onClick={() => {
-                        setShowDeleteModal(true);
-                        setShowMenu(false);
-                      }}
-                      className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
-                    >
-                      Delete Post
-                    </button>
-                  </div>
-                )}
-              </div>
+              {renderStars(post.overall)}
             </div>
-          <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/60 to-transparent rounded-b-lg">
-            <div className="flex items-center gap-2">
-              <div className="flex gap-0">
-                {renderStars(post.overall)}
-              </div>
-              <span className="text-sm font-medium text-white">
-                {overallRatingDescriptors[Math.round(post.overall)]}
-              </span>
+        </div>
+        <div className="mt-1">
+          <div className="flex items-center justify-between mb-1 mt-2 gap-4">
+            <h2 className="text-3xl font-semibold text-gray-800 font-baloo2 flex-1">
+              <Link href={`/location/${createLocationSlug(post.locationName)}`} className="hover:text-gray-600 transition-colors font-baloo2">
+                {getEstablishmentName(post.locationName)}
+              </Link>
+              {post.menuName && (
+                <span className="text-2xl font-light text-gray-600 font-baloo2">
+                  {' - '}{post.menuName}
+                </span>
+              )}
+            </h2>
+            <div className="flex-shrink-0 relative -mt-1" ref={menuRef}>
+              <button
+                onClick={() => setShowMenu(!showMenu)}
+                className="p-2 bg-white rounded-full transition-colors"
+                style={{ borderWidth: '3px', borderStyle: 'solid', borderColor: 'black' }}
+              >
+                <svg className="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                </svg>
+              </button>
+              {showMenu && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10" style={{ borderWidth: '3px', borderStyle: 'solid', borderColor: 'black' }}>
+                  <button
+                    onClick={() => {
+                      setShowDeleteModal(true);
+                      setShowMenu(false);
+                    }}
+                    className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                  >
+                    Delete Post
+                  </button>
+                </div>
+              )}
             </div>
           </div>
-        </div>
-      </div>
-      
-      <div className="px-4 pb-4">
-        <div className="mt-1">
           {post.types && post.types.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-2">
+            <div className="flex flex-wrap gap-2 mb-2 mt-0">
               {post.types.map((type, index) => (
-                <span 
+                <span
                   key={index}
-                  className="inline-flex items-center px-3 py-1 text-sm bg-white/60 backdrop-blur-sm text-gray-700 rounded-full border border-gray-400 capitalize font-normal"
+                  className="inline-flex items-center px-3 py-1 text-sm capitalize font-bold font-baloo2"
+                  style={{ color: 'var(--yellow-custom)', background: 'var(--red-custom)' }}
                 >
                   {type}
                 </span>
               ))}
             </div>
           )}
-          <h2 className="text-2xl font-semibold text-gray-800">
-            <Link href={`/location/${createLocationSlug(post.locationName)}`} className="hover:text-gray-600 transition-colors">
-              {getEstablishmentName(post.locationName)}
-            </Link>
-            {post.menuName && (
-              <span className="text-2xl font-light text-gray-600">
-                {' - '}{post.menuName}
-              </span>
-            )}
-          </h2>
-          <p className="text-gray-600 mb-2">{post.description}</p>
+          <p className="text-gray-600 mb-2 font-baloo2">{post.description}</p>
         </div>
 
         {hasSpecificRatings && (
