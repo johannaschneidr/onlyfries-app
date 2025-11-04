@@ -6,17 +6,16 @@
   --yellow-custom: #FDF551;
   --red-custom: #EA3323;
   --blue-custom: #4580D3;
-  --light-blue-custom: #7BB8FE;
+  --light-blue-custom: #a5d5fa;
 }
 
 body {
   font-family: var(--font-baloo2), system-ui, -apple-system, sans-serif;
-  background-color: #4580D3;
-  /* background-image: url('/assets/background.png'); */
-  /* background-size: cover; */
-  /* background-position: center; */
-  /* background-repeat: no-repeat; */
-  /* background-attachment: fixed; */
+  background-image: url('/assets/background6.png');
+  background-size: auto 100vh;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
   min-height: 100vh;
 }
 
