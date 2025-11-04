@@ -9,14 +9,32 @@
   --light-blue-custom: #a5d5fa;
 }
 
-body {
-  font-family: var(--font-baloo2), system-ui, -apple-system, sans-serif;
+html {
   background-image: url('/assets/background6.png');
   background-size: auto 100vh;
-  background-position: center;
+  background-position: center top;
   background-repeat: no-repeat;
   background-attachment: fixed;
   min-height: 100vh;
+}
+
+body {
+  font-family: var(--font-baloo2), system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
+}
+
+/* Fix for mobile devices */
+@media (max-width: 768px) {
+  html {
+    background-attachment: scroll;
+    background-size: cover;
+    background-position: center top;
+    height: 100%;
+  }
+  
+  body {
+    height: 100%;
+  }
 }
 
 /* Remove the overlay */
