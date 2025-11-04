@@ -62,7 +62,7 @@ export default function Navbar({ onLogoClick, isRefreshing = false }) {
 
   return (
     <>
-      <nav className="sticky top-0 z-50 p-4 flex justify-between items-center" style={{ backgroundColor: 'var(--blue-custom)' }}>
+      <nav className="z-50 p-4 flex justify-between items-center">
         {isHomePage && onLogoClick ? (
           <button
             onClick={() => {
@@ -177,7 +177,12 @@ export default function Navbar({ onLogoClick, isRefreshing = false }) {
       {/* Mobile Menu Overlay */}
       {isMenuOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden">
-          <div className="fixed inset-0 flex flex-col overflow-hidden" style={{ backgroundColor: 'var(--blue-custom)' }}>
+          <div className="fixed inset-0 flex flex-col overflow-hidden" style={{ 
+            backgroundImage: 'url(\'/assets/background6.png\')',
+            backgroundSize: 'auto 100vh',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat'
+          }}>
             <div className="p-4 flex justify-between items-center">
               <div className="w-0"></div>
               <button
@@ -202,7 +207,7 @@ export default function Navbar({ onLogoClick, isRefreshing = false }) {
               </button>
             </div>
             {user && username && (
-              <div className="px-4 pt-0 pb-2">
+              <div className="px-4 pt-2 pb-2">
                 <p className="p-2 font-bold font-rouge-script text-8xl">
                   <span className="text-white">Hi, </span>
                   <span style={{ color: 'var(--light-blue-custom)' }}>{username}</span>
