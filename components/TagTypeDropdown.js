@@ -15,8 +15,6 @@ export default function TagTypeDropdown({
   const tagInputContainerRef = useRef(null);
   const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0 });
   const dropdownMenuRef = useRef(null);
-  const [inputWidth, setInputWidth] = useState(2);
-  const inputSizerRef = useRef(null);
 
   useEffect(() => {
     if (tagInput) {
@@ -24,28 +22,33 @@ export default function TagTypeDropdown({
         type.label.toLowerCase().includes(tagInput.toLowerCase()) &&
         !selectedTags.includes(type.value)
       );
-      setSuggestions(filtered);
+      setSuggestions(filtered.sort((a, b) => a.label.localeCompare(b.label)));
     } else {
       const filtered = allFryTypes.filter(type => !selectedTags.includes(type.value));
-      setSuggestions(filtered);
+      setSuggestions(filtered.sort((a, b) => a.label.localeCompare(b.label)));
     }
   }, [tagInput, allFryTypes, selectedTags]);
 
   useEffect(() => {
     if (!showSuggestions) return;
     function handleClickOutside(event) {
+      const target = event.target;
+      // Check if click is outside both the input container and the dropdown menu
       if (
         tagInputContainerRef.current &&
-        !tagInputContainerRef.current.contains(event.target) &&
+        !tagInputContainerRef.current.contains(target) &&
         dropdownMenuRef.current &&
-        !dropdownMenuRef.current.contains(event.target)
+        !dropdownMenuRef.current.contains(target)
       ) {
         setShowSuggestions(false);
       }
     }
-    document.addEventListener('mousedown', handleClickOutside);
+    // Use capture phase to catch clicks earlier
+    document.addEventListener('mousedown', handleClickOutside, true);
+    document.addEventListener('touchstart', handleClickOutside, true);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('mousedown', handleClickOutside, true);
+      document.removeEventListener('touchstart', handleClickOutside, true);
     };
   }, [showSuggestions]);
 
@@ -60,12 +63,6 @@ export default function TagTypeDropdown({
       });
     }
   }, [showSuggestions, selectedTags, tagInput]);
-
-  useEffect(() => {
-    if (inputSizerRef.current) {
-      setInputWidth(inputSizerRef.current.offsetWidth + 2);
-    }
-  }, [tagInput]);
 
   const addTag = (type) => {
     if (!selectedTags.includes(type.value)) {
@@ -88,36 +85,34 @@ export default function TagTypeDropdown({
 
   return (
     <div className={`relative ${className}`} ref={tagInputContainerRef}>
-      <div className="relative bg-white rounded-md border border-white/50">
-        <div className="py-2 px-4">
-          <div
-            className="flex flex-wrap gap-2 items-center relative min-h-[36px]"
-            onClick={() => tagInputRef.current && tagInputRef.current.focus()}
-            style={{ cursor: 'text' }}
-          >
-            {selectedTags.map(type => {
-              const typeInfo = allFryTypes.find(t => t.value === type);
-              return (
-                <span
-                  key={type}
-                  className="inline-flex items-center px-3 py-1 text-sm bg-white/60 backdrop-blur-sm text-gray-700 rounded-full border border-gray-400"
+      {/* Selected tags displayed above input field */}
+      {selectedTags.length > 0 && (
+        <div className="mb-3 flex flex-wrap gap-2">
+          {selectedTags.map(type => {
+            const typeInfo = allFryTypes.find(t => t.value === type);
+            return (
+              <span
+                key={type}
+                className="inline-flex items-center px-3 py-1 text-base capitalize font-bold font-baloo2"
+                style={{ color: 'var(--yellow-custom)', background: 'var(--red-custom)' }}
+              >
+                {typeInfo?.label || type}
+                <button
+                  type="button"
+                  onClick={() => removeTag(type)}
+                  className="ml-1 text-white hover:text-gray-200"
                 >
-                  {typeInfo?.label || type}
-                  <button
-                    type="button"
-                    onClick={() => removeTag(type)}
-                    className="ml-1 text-gray-500 hover:text-gray-700"
-                  >
-                    ×
-                  </button>
-                </span>
-              );
-            })}
-            {selectedTags.length === 0 && !tagInput && (
-              <span className="absolute left-0 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none select-none pl-1 text-base">
-                Search for type
+                  ×
+                </button>
               </span>
-            )}
+            );
+          })}
+        </div>
+      )}
+      {/* Input field matching PostForm style */}
+      <div className="relative bg-white rounded-full h-[60px]" style={{ borderWidth: '3px', borderStyle: 'solid', borderColor: '#9CA3AF' }}>
+        <div className="p-4 h-full">
+          <div className="flex items-center h-full">
             <input
               ref={tagInputRef}
               type="text"
@@ -125,18 +120,9 @@ export default function TagTypeDropdown({
               onChange={e => setTagInput(e.target.value)}
               onKeyDown={handleTagKeyDown}
               onFocus={() => setShowSuggestions(true)}
-              className="min-w-0 outline-none text-base bg-transparent"
-              style={{ width: inputWidth }}
-              placeholder=""
+              className="flex-1 min-w-[150px] outline-none text-base bg-transparent"
+              placeholder="Type to search"
             />
-            {/* Hidden span to measure input width */}
-            <span
-              ref={inputSizerRef}
-              className="invisible absolute whitespace-pre pointer-events-none text-base"
-              style={{ padding: 0, margin: 0 }}
-            >
-              {tagInput || ' '}
-            </span>
           </div>
         </div>
       </div>
@@ -144,24 +130,24 @@ export default function TagTypeDropdown({
       {showSuggestions && suggestions.length > 0 && typeof window !== 'undefined' && createPortal(
         <div
           ref={dropdownMenuRef}
-          className="absolute z-[9999] w-full mt-1.5 bg-white border border-white/50 rounded-md shadow-lg"
+          className="absolute z-[9999] w-full mt-1.5 bg-white rounded-md shadow-lg"
           style={{
             position: 'absolute',
             top: dropdownPos.top,
             left: dropdownPos.left,
             width: dropdownPos.width,
             zIndex: 9999,
+            borderWidth: '3px',
+            borderStyle: 'solid',
+            borderColor: 'black'
           }}
         >
           {suggestions.map((type) => (
             <div
               key={type.value}
               onClick={() => addTag(type)}
-              className="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer text-base border-b border-white/30 last:border-b-0"
+              className="flex items-center px-4 py-3 hover:bg-white/50 cursor-pointer text-base border-b border-gray-300 last:border-b-0"
             >
-              <svg className="w-4 h-4 text-gray-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
               {type.label}
             </div>
           ))}

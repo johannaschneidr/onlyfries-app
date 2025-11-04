@@ -7,9 +7,11 @@ import Header from '../components/Header';
 import { db } from '../lib/firebase';
 import { collection, query, orderBy, onSnapshot, getDocs } from 'firebase/firestore';
 import LoginModal from '../components/LoginModal';
+import PrimaryButton from '../components/PrimaryButton';
 
 export default function Home() {
   const [posts, setPosts] = useState([]);
+  const [displayedPostsCount, setDisplayedPostsCount] = useState(10);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [pullDistance, setPullDistance] = useState(0);
@@ -41,11 +43,23 @@ export default function Home() {
       ...doc.data()
     }));
     setPosts(postsData);
+    setDisplayedPostsCount(10); // Reset to initial count
     // Small delay for visual feedback
     setTimeout(() => {
       setIsRefreshing(false);
     }, 500);
   };
+
+  const loadMore = () => {
+    setDisplayedPostsCount(prev => prev + 10);
+  };
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const displayedPosts = posts.slice(0, displayedPostsCount);
+  const hasMore = posts.length > displayedPostsCount;
 
   useEffect(() => {
     // Debug: Log initial collection data
@@ -142,10 +156,23 @@ export default function Home() {
         </div>
         <h1 className="text-4xl font-bold mb-3 font-rouge-script" style={{ color: 'var(--yellow-custom)' }}>New to the party</h1>
         <div className="grid gap-6">
-          {posts.map(post => (
+          {displayedPosts.map(post => (
             <PostCard key={post.id} post={post} openLoginModal={() => setShowLoginModal(true)} />
           ))}
         </div>
+        {hasMore && (
+          <div className="flex items-center justify-center gap-4 mt-6">
+            <PrimaryButton onClick={loadMore} className="!px-6 !py-2">
+              <span className="text-lg">Load more</span>
+            </PrimaryButton>
+            <button
+              onClick={scrollToTop}
+              className="text-black font-bold underline font-quattrocento"
+            >
+              Go to Top
+            </button>
+          </div>
+        )}
       </main>
     </>
   );

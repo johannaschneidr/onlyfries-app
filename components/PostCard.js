@@ -225,19 +225,19 @@ export default function PostCard({ post, openLoginModal }) {
           {reactions.length > 0 && (
             <div className="mt-4">
               {!showReactions ? (
-                <button
-                  onClick={() => setShowReactions(true)}
-                  className="w-full py-2 px-3 text-sm font-bold hover:text-gray-900 flex items-center justify-center transition-colors font-quattrocento underline rounded-full"
-                  style={{ 
-                    color: 'var(--red-custom)',
-                    backgroundColor: '#DFEEFF',
-                    borderWidth: '3px',
-                    borderStyle: 'solid',
-                    borderColor: 'black'
-                  }}
-                >
-                  <span>SHOW {reactions.length} REACTION{reactions.length > 1 ? 'S' : ''}</span>
-                </button>
+                  <button
+                    onClick={() => setShowReactions(true)}
+                    className="w-full py-2 px-3 text-sm font-bold hover:text-gray-900 flex items-center justify-center transition-colors font-quattrocento underline rounded-full"
+                    style={{ 
+                      color: 'var(--red-custom)',
+                      backgroundColor: 'transparent',
+                      borderWidth: '3px',
+                      borderStyle: 'solid',
+                      borderColor: 'var(--red-custom)'
+                    }}
+                  >
+                    <span>SHOW {reactions.length} REACTION{reactions.length > 1 ? 'S' : ''}</span>
+                  </button>
               ) : (
                 <div className="space-y-4">
                   {reactions.map((reaction) => (
@@ -265,10 +265,10 @@ export default function PostCard({ post, openLoginModal }) {
                     className="w-full py-2 px-3 text-sm font-bold hover:text-gray-900 flex items-center justify-center transition-colors font-quattrocento underline rounded-full"
                     style={{ 
                       color: 'var(--red-custom)',
-                      backgroundColor: '#DFEEFF',
+                      backgroundColor: 'transparent',
                       borderWidth: '3px',
                       borderStyle: 'solid',
-                      borderColor: 'black'
+                      borderColor: 'var(--red-custom)'
                     }}
                   >
                     <span>HIDE REACTIONS</span>

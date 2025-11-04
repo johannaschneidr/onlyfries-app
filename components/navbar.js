@@ -118,9 +118,9 @@ export default function Navbar({ onLogoClick, isRefreshing = false }) {
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
               style={isMyPostsPage ? {} : {}}
-              aria-label="My Posts"
+              aria-label="My Reviews"
             >
-              <span className={`font-medium ${isMyPostsPage ? 'underline' : ''} font-baloo2`} style={isMyPostsPage ? { color: 'var(--yellow-custom)' } : {}}>My Posts</span>
+              <span className={`font-medium ${isMyPostsPage ? 'underline' : ''} font-baloo2`} style={isMyPostsPage ? { color: 'var(--yellow-custom)' } : {}}>My Reviews</span>
             </Link>
           )}
           {user ? (
@@ -253,9 +253,9 @@ export default function Navbar({ onLogoClick, isRefreshing = false }) {
                     style={isMyPostsPage ? {} : {}}
                     onMouseEnter={(e) => !isMyPostsPage && (e.target.style.color = 'var(--yellow-custom)')}
                     onMouseLeave={(e) => !isMyPostsPage && (e.target.style.color = 'white')}
-                    aria-label="My Posts"
+                    aria-label="My Reviews"
                   >
-                    <span className={`font-medium text-2xl ${isMyPostsPage ? 'underline' : ''} font-baloo2`} style={isMyPostsPage ? { color: 'var(--yellow-custom)' } : {}}>My Posts</span>
+                    <span className={`font-medium text-2xl ${isMyPostsPage ? 'underline' : ''} font-baloo2`} style={isMyPostsPage ? { color: 'var(--yellow-custom)' } : {}}>My Reviews</span>
                   </Link>
                 )}
                 {user && (

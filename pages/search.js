@@ -175,25 +175,25 @@ export default function SearchPage() {
   const renderRatingSelector = (category, label) => (
     <div className="mb-4">
       <div className="flex items-center h-full gap-2">
-        <span className="text-sm text-gray-500 w-20 font-baloo2">{label}</span>
-        <div className="flex gap-1 flex-1">
+        <span className="text-sm text-gray-500 w-20 font-quattrocento uppercase font-bold">{label}:</span>
+        <div className="flex gap-1 flex-1 ml-4">
           {[1, 2, 3, 4, 5].map((num) => (
             <button
               key={num}
               onClick={() => handleFilterChange(category, num)}
-              className={`w-full h-8 rounded-md flex items-center justify-center text-xs font-medium transition-colors
+              className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium transition-colors
                 ${filters[category] === num 
                   ? 'text-white' 
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
-              style={filters[category] === num ? { backgroundColor: 'var(--yellow-custom)' } : {}}
+              style={filters[category] === num ? { backgroundColor: 'var(--blue-custom)' } : {}}
               aria-label={`Set ${label} to ${num}`}
             >
               {/* No number shown */}
             </button>
           ))}
         </div>
-        <span className="text-sm font-medium text-gray-700 w-20 text-right font-baloo2">
+        <span className="text-sm font-medium text-black w-20 text-right font-baloo2 uppercase">
           {filters[category] > 0 ? ratingDescriptors[category][filters[category]] : 'Any'}
         </span>
       </div>
@@ -299,32 +299,38 @@ export default function SearchPage() {
     <>
       <Navbar />
       <main className="max-w-4xl mx-auto p-4">
-        <h1 className="text-3xl font-semibold mb-6 font-rouge-script" style={{ color: 'var(--yellow-custom)' }}>Find Your Perfect Fries</h1>
+        <h1 className="text-4xl font-bold mb-6 font-rouge-script" style={{ color: 'var(--yellow-custom)' }}>Find Your Perfect Fries</h1>
         {/* Filters Section - now at the top */}
-        <div className="bg-white/65 backdrop-blur-sm p-4 rounded-xl border border-white/50 mb-6">
-          <h2 className="text-lg font-medium text-gray-800 mb-4 font-baloo2">Filters</h2>
-          <div className="flex flex-col gap-2">
-            {renderRatingSelector('length', 'Length')}
-            {renderRatingSelector('thickness', 'Thickness')}
-            {renderRatingSelector('crispiness', 'Crispiness')}
-            {renderRatingSelector('saltiness', 'Saltiness')}
-            {renderRatingSelector('darkness', 'Color')}
-            {/* Fry type tags filter UI (moved below other filters, matches PostForm) */}
-            <TagTypeDropdown
-              allFryTypes={allFryTypes}
-              selectedTags={typeTags}
-              setSelectedTags={setTypeTags}
-              placeholder="Type of fries"
-              className="z-50 mt-2"
-            />
-            {/* End fry type tags filter UI */}
+        <div className="overflow-hidden bg-white rounded-xl mb-6" style={{ borderWidth: '3px', borderStyle: 'solid', borderColor: 'black' }}>
+          <div className="px-4 py-4">
+            <h2 className="text-lg font-bold mb-2 font-baloo2">Filters</h2>
+            <div className="flex flex-col gap-2">
+              {renderRatingSelector('length', 'Length')}
+              {renderRatingSelector('thickness', 'Thickness')}
+              {renderRatingSelector('crispiness', 'Crispiness')}
+              {renderRatingSelector('saltiness', 'Saltiness')}
+              {renderRatingSelector('darkness', 'Color')}
+              {/* Fry type tags filter UI (moved below other filters, matches PostForm) */}
+              <div className="mt-2">
+                <h3 className="text-lg font-bold mb-2 font-baloo2">Category</h3>
+                <TagTypeDropdown
+                  allFryTypes={allFryTypes}
+                  selectedTags={typeTags}
+                  setSelectedTags={setTypeTags}
+                  placeholder="Type of fries"
+                  className="z-50"
+                />
+              </div>
+              {/* End fry type tags filter UI */}
+            </div>
           </div>
         </div>
         {/* Results Section */}
+        <h2 className="text-lg font-bold mb-4 font-baloo2">Search Results</h2>
         <div className="space-y-4 z-0 relative">
           {filteredLocations.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-gray-600 font-baloo2">No locations match your filters. Try adjusting your criteria.</p>
+            <div className="overflow-hidden rounded-xl text-center py-12 px-6" style={{ borderWidth: '3px', borderStyle: 'solid', borderColor: 'black', backgroundColor: 'var(--light-blue-custom)' }}>
+              <p className="text-gray-800 font-baloo2 text-lg">No locations match your filters. Try adjusting your criteria.</p>
             </div>
           ) : (
             filteredLocations.map((location) => (
