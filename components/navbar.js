@@ -62,7 +62,7 @@ export default function Navbar({ onLogoClick, isRefreshing = false }) {
 
   return (
     <>
-      <nav className="p-4 flex justify-between items-center">
+      <nav className="sticky top-0 z-50 p-4 flex justify-between items-center" style={{ backgroundColor: 'var(--blue-custom)' }}>
         {isHomePage && onLogoClick ? (
           <button
             onClick={() => {
