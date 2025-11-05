@@ -120,12 +120,13 @@ export default function Navbar({ onLogoClick, isRefreshing = false }) {
 
       {/* Menu Overlay - All Devices */}
       {isMenuOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-40">
+        <div className="fixed inset-0 bg-black bg-opacity-50" style={{ zIndex: 999 }}>
           <div className="fixed inset-0 flex flex-col overflow-hidden background-image-menu" style={{ 
             backgroundImage: 'url(\'/assets/background6.png\')',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
-            height: '100dvh'
+            height: '100dvh',
+            zIndex: 999
           }}>
             <div className="p-4 flex justify-between items-center">
               <div className="w-0"></div>
