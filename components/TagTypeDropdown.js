@@ -130,13 +130,13 @@ export default function TagTypeDropdown({
       {showSuggestions && suggestions.length > 0 && typeof window !== 'undefined' && createPortal(
         <div
           ref={dropdownMenuRef}
-          className="absolute z-[9999] w-full mt-1.5 bg-white rounded-md shadow-lg"
+          className="absolute z-30 w-full mt-1.5 bg-white rounded-md shadow-lg"
           style={{
             position: 'absolute',
             top: dropdownPos.top,
             left: dropdownPos.left,
             width: dropdownPos.width,
-            zIndex: 9999,
+            zIndex: 30,
             borderWidth: '3px',
             borderStyle: 'solid',
             borderColor: 'black'
