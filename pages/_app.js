@@ -1,6 +1,7 @@
 import { AuthProvider } from '../contexts/AuthContext';
 import UsernameGuard from '../components/UsernameGuard';
 import Footer from '../components/Footer';
+import DesktopWarning from '../components/DesktopWarning';
 import '../global.css'
 import Script from 'next/script'
 import { Baloo_2, Rouge_Script, Quattrocento } from 'next/font/google'
@@ -42,15 +43,25 @@ function MyApp({ Component, pageProps }) {
   return (
     <AuthProvider>
       <UsernameGuard>
-        <div className={`min-h-screen flex flex-col ${baloo2.variable} ${rougeScript.variable} ${quattrocento.variable}`}>
+        <div className={`min-h-screen flex flex-col relative ${baloo2.variable} ${rougeScript.variable} ${quattrocento.variable}`} style={{ zIndex: 10 }}>
+          <div className="bg background-image" style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100dvh',
+            zIndex: -1,
+            backgroundImage: 'url(\'/assets/background6.png\')'
+          }} />
           <Script
             src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`}
             strategy="beforeInteractive"
           />
-          <div className="flex-1">
+          <div className="flex-1 relative" style={{ zIndex: 10 }}>
             <Component {...pageProps} />
           </div>
           <Footer />
+          <DesktopWarning />
         </div>
       </UsernameGuard>
     </AuthProvider>

@@ -11,12 +11,9 @@
 
 body {
   font-family: var(--font-baloo2), system-ui, -apple-system, sans-serif;
-  background-image: url('/assets/background6.png');
-  background-size: auto 100vh;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
-  min-height: 100vh;
+  min-height: 100dvh;
+  margin: 0;
+  padding: 0;
 }
 
 /* Remove the overlay */
@@ -30,6 +27,36 @@ body {
   background-color: rgba(255, 255, 255, 0.85);
   z-index: -1;
 } */
+
+/* Background image styling - desktop full width, mobile height-based */
+.background-image {
+  background-size: auto 100dvh;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* Desktop: span full width */
+@media (min-width: 769px) {
+  .background-image {
+    background-size: 100% 100%;
+    background-position: center;
+  }
+}
+
+/* Menu background image styling - same as main background */
+.background-image-menu {
+  background-size: auto 100dvh;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* Desktop: menu background spans full width */
+@media (min-width: 769px) {
+  .background-image-menu {
+    background-size: 100% 100%;
+    background-position: center;
+  }
+}
 
 /* Remove focus outline from Google Maps button */
 a:focus {
