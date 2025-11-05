@@ -95,66 +95,10 @@ export default function Navbar({ onLogoClick, isRefreshing = false }) {
             />
           </Link>
         )}
-        {/* Desktop Navigation */}
-        <div className="hidden md:flex items-center gap-4">
-          <Link
-            href="/search"
-            className={`flex items-center gap-2 px-4 py-2 rounded-full transition-colors ${
-              isSearchPage
-                ? 'text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
-            style={isSearchPage ? {} : {}}
-            aria-label="Search"
-          >
-            <span className={`font-medium ${isSearchPage ? 'underline' : ''} font-baloo2`} style={isSearchPage ? { color: 'var(--yellow-custom)' } : {}}>FriesFinder</span>
-          </Link>
-          {user && (
-            <Link
-              href="/my-posts"
-              className={`flex items-center gap-2 px-4 py-2 rounded-full transition-colors ${
-                isMyPostsPage
-                  ? 'text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-              style={isMyPostsPage ? {} : {}}
-              aria-label="My Reviews"
-            >
-              <span className={`font-medium ${isMyPostsPage ? 'underline' : ''} font-baloo2`} style={isMyPostsPage ? { color: 'var(--yellow-custom)' } : {}}>My Reviews</span>
-            </Link>
-          )}
-          {user ? (
-            <Link
-              href="/profile"
-              className={`flex items-center gap-2 p-2 transition-colors ${
-                isProfilePage
-                  ? ''
-                  : 'text-gray-600'
-              }`}
-              style={isProfilePage ? {} : {}}
-              onMouseEnter={(e) => !isProfilePage && (e.target.style.color = 'var(--yellow-custom)')}
-              onMouseLeave={(e) => !isProfilePage && (e.target.style.color = '#6B7280')}
-              aria-label="Account"
-            >
-              <span className={`font-medium ${isProfilePage ? 'underline' : ''} font-baloo2`} style={isProfilePage ? { color: 'var(--yellow-custom)' } : {}}>Profile Settings</span>
-            </Link>
-          ) : (
-            <Link
-              href="/login"
-              className="flex items-center gap-2 px-4 py-2 rounded-full text-white transition-colors border-2 border-red-500"
-              style={{ backgroundColor: 'var(--yellow-custom)' }}
-              onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--yellow-custom)'}
-              onMouseLeave={(e) => e.target.style.backgroundColor = 'var(--yellow-custom)'}
-              aria-label="Login"
-            >
-              <span className="font-bold uppercase tracking-wide font-baloo2">Login</span>
-            </Link>
-          )}
-        </div>
-        {/* Mobile Burger Menu Button */}
+        {/* Burger Menu Button - All Devices */}
         <button
           onClick={toggleMenu}
-          className="md:hidden p-2 text-white transition-colors"
+          className="p-2 text-white transition-colors"
           aria-label="Toggle menu"
         >
           <svg
@@ -174,14 +118,14 @@ export default function Navbar({ onLogoClick, isRefreshing = false }) {
         </button>
       </nav>
 
-      {/* Mobile Menu Overlay */}
+      {/* Menu Overlay - All Devices */}
       {isMenuOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden">
-          <div className="fixed inset-0 flex flex-col overflow-hidden" style={{ 
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-40">
+          <div className="fixed inset-0 flex flex-col overflow-hidden background-image-menu" style={{ 
             backgroundImage: 'url(\'/assets/background6.png\')',
-            backgroundSize: 'auto 100vh',
             backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat'
+            backgroundRepeat: 'no-repeat',
+            height: '100dvh'
           }}>
             <div className="p-4 flex justify-between items-center">
               <div className="w-0"></div>
