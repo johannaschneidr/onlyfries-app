@@ -7,6 +7,8 @@ import { collection, query, where, getDocs, addDoc, deleteDoc, doc, updateDoc, g
 import ReactionPicker from './ReactionPicker';
 import CategoryDisplay from './CategoryDisplay';
 import MyReactions from './MyReactions';
+import PrimaryButton from './PrimaryButton';
+import SecondaryButton from './SecondaryButton';
 
 export default function MyPostCard({ post }) {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -224,11 +226,10 @@ export default function MyPostCard({ post }) {
                 </span>
               )}
             </h2>
-            <div className="flex-shrink-0 relative -mt-1" ref={menuRef}>
+            <div className="flex-shrink-0 relative -mt-1 -mr-2" ref={menuRef}>
               <button
                 onClick={() => setShowMenu(!showMenu)}
-                className="p-2 bg-white rounded-full transition-colors"
-                style={{ borderWidth: '3px', borderStyle: 'solid', borderColor: 'black' }}
+                className="p-2 transition-colors"
               >
                 <svg className="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
@@ -296,24 +297,42 @@ export default function MyPostCard({ post }) {
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-xl">
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Delete Post</h3>
-            <p className="text-gray-600 mb-6">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 relative" style={{ borderWidth: '3px', borderStyle: 'solid', borderColor: 'black' }}>
+            <button
+              onClick={() => setShowDeleteModal(false)}
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition-colors"
+              aria-label="Close"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            <h3 className="text-4xl font-bold mb-3 font-rouge-script" style={{ color: 'var(--red-custom)' }}>Delete Post</h3>
+            <p className="text-lg mb-6 font-baloo2 text-gray-700">
               Are you sure you want to delete this post? This action cannot be undone.
             </p>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setShowDeleteModal(false)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-              >
-                Cancel
-              </button>
+            <div className="flex flex-col gap-3">
               <button
                 onClick={handleDeletePost}
-                className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
+                className="inline-block px-10 py-2 rounded-full mt-2 w-full"
+                style={{
+                  borderWidth: '3px',
+                  borderStyle: 'solid',
+                  borderColor: 'black',
+                  backgroundColor: 'var(--red-custom)',
+                  color: 'var(--yellow-custom)'
+                }}
               >
-                Delete
+                <span className="text-2xl font-medium font-quattrocento underline whitespace-nowrap">
+                  Delete post
+                </span>
               </button>
+              <SecondaryButton
+                onClick={() => setShowDeleteModal(false)}
+                className="w-full"
+              >
+                Cancel
+              </SecondaryButton>
             </div>
           </div>
         </div>
