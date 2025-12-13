@@ -329,8 +329,6 @@ export default function Leaderboard() {
                     borderStyle: 'solid', 
                     borderColor: 'var(--red-custom)' 
                   }}
-                  onMouseEnter={(e) => e.target.style.color = 'var(--yellow-custom)'}
-                  onMouseLeave={(e) => e.target.style.color = 'var(--red-custom)'}
                   onClick={e => e.stopPropagation()}
                 >
                   <span className="text-sm">FULL PROFILE</span>
@@ -341,8 +339,6 @@ export default function Leaderboard() {
                   rel="noopener noreferrer"
                   className="flex items-center justify-center gap-1 text-black transition-colors px-4 py-3 rounded-full flex-1"
                   style={{ borderWidth: '3px', borderStyle: 'solid', borderColor: 'black' }}
-                  onMouseEnter={(e) => e.target.style.color = 'var(--yellow-custom)'}
-                  onMouseLeave={(e) => e.target.style.color = 'black'}
                   onClick={(e) => e.stopPropagation()}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

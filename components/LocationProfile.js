@@ -94,8 +94,6 @@ export default function LocationProfile({ locationData }) {
                 borderStyle: 'solid', 
                 borderColor: 'black' 
               }}
-              onMouseEnter={(e) => e.target.style.color = 'var(--yellow-custom)'}
-              onMouseLeave={(e) => e.target.style.color = 'black'}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" />

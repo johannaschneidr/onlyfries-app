@@ -110,7 +110,7 @@ export default function TagTypeDropdown({
         </div>
       )}
       {/* Input field matching PostForm style */}
-      <div className="relative bg-white rounded-full h-[60px]" style={{ borderWidth: '3px', borderStyle: 'solid', borderColor: '#9CA3AF' }}>
+      <div className="relative bg-white rounded-full h-[60px]" style={{ borderWidth: '3px', borderStyle: 'solid', borderColor: 'black' }}>
         <div className="p-4 h-full">
           <div className="flex items-center h-full">
             <input

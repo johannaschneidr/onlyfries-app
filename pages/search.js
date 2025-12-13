@@ -4,6 +4,7 @@ import Navbar from '../components/navbar';
 import { getAllLocations } from '../lib/api';
 import CategoryAveragesDisplay from '../components/CategoryAveragesDisplay';
 import SearchResult from '../components/SearchResult';
+import LocationMap from '../components/LocationMap';
 import { collection, query as firestoreQuery, where, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import TagTypeDropdown from '../components/TagTypeDropdown';
@@ -67,6 +68,7 @@ export default function SearchPage() {
   });
   const [locationImages, setLocationImages] = useState({});
   const [expandedCard, setExpandedCard] = useState(null);
+  const [filtersExpanded, setFiltersExpanded] = useState(false);
 
   // Fry Type Categories (copied from PostForm)
   const fryTypes = {
@@ -130,6 +132,9 @@ export default function SearchPage() {
 
   // Helper to get only selected categories
   const selectedCategories = Object.keys(filters).filter((cat) => filters[cat] > 0);
+  
+  // Calculate total active filters
+  const activeFiltersCount = selectedCategories.length + typeTags.length;
 
   // Helper to calculate match score (lower is better)
   const getMatchScore = (location) => {
@@ -175,8 +180,8 @@ export default function SearchPage() {
   const renderRatingSelector = (category, label) => (
     <div className="mb-4">
       <div className="flex items-center h-full gap-2">
-        <span className="text-sm text-gray-500 w-20 font-quattrocento uppercase font-bold">{label}:</span>
-        <div className="flex gap-1 flex-1 ml-4">
+        <span className="text-sm text-black w-24 font-quattrocento uppercase font-bold">{label}</span>
+        <div className="flex gap-1 flex-1" style={{ marginLeft: '0' }}>
           {[1, 2, 3, 4, 5].map((num) => (
             <button
               key={num}
@@ -184,9 +189,9 @@ export default function SearchPage() {
               className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium transition-colors
                 ${filters[category] === num 
                   ? 'text-white' 
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  : 'text-gray-700'
                 }`}
-              style={filters[category] === num ? { backgroundColor: 'var(--blue-custom)' } : {}}
+              style={filters[category] === num ? { backgroundColor: 'var(--blue-custom)' } : { backgroundColor: 'white' }}
               aria-label={`Set ${label} to ${num}`}
             >
               {/* No number shown */}
@@ -301,56 +306,96 @@ export default function SearchPage() {
       <main className="max-w-4xl mx-auto p-4">
         <h1 className="text-4xl font-bold mb-6 font-rouge-script" style={{ color: 'var(--yellow-custom)' }}>Find Your Perfect Fries</h1>
         {/* Filters Section - now at the top */}
-        <div className="overflow-hidden bg-white rounded-xl mb-6" style={{ borderWidth: '3px', borderStyle: 'solid', borderColor: 'black' }}>
-          <div className="px-4 py-4">
-            <h2 className="text-lg font-bold mb-2 font-baloo2">Filters</h2>
-            <div className="flex flex-col gap-2">
-              {renderRatingSelector('length', 'Length')}
-              {renderRatingSelector('thickness', 'Thickness')}
-              {renderRatingSelector('crispiness', 'Crispiness')}
-              {renderRatingSelector('saltiness', 'Saltiness')}
-              {renderRatingSelector('darkness', 'Color')}
-              {/* Fry type tags filter UI (moved below other filters, matches PostForm) */}
-              <div className="mt-2">
-                <h3 className="text-lg font-bold mb-2 font-baloo2">Category</h3>
-                <TagTypeDropdown
-                  allFryTypes={allFryTypes}
-                  selectedTags={typeTags}
-                  setSelectedTags={setTypeTags}
-                  placeholder="Type of fries"
-                  className="z-50"
-                />
+        <div className="overflow-hidden rounded-xl mb-6" style={{ borderWidth: '3px', borderStyle: 'solid', borderColor: 'black', backgroundColor: '#DFEEFF' }}>
+          <button
+            onClick={() => setFiltersExpanded(!filtersExpanded)}
+            className="w-full px-4 py-4 flex items-center justify-between transition-colors"
+            style={{ backgroundColor: 'transparent' }}
+            aria-label={filtersExpanded ? 'Collapse filters' : 'Expand filters'}
+          >
+            <h2 className="text-lg font-bold font-baloo2">Filter Search</h2>
+            <div className="flex items-center gap-2">
+              {!filtersExpanded && activeFiltersCount > 0 && (
+                <span 
+                  className="px-2.5 py-1.5 text-sm font-bold rounded-full font-baloo2"
+                  style={{ 
+                    backgroundColor: 'var(--red-custom)', 
+                    color: 'var(--yellow-custom)'
+                  }}
+                >
+                  {activeFiltersCount} selected
+                </span>
+              )}
+              <svg
+                className={`w-5 h-5 transition-transform ${filtersExpanded ? 'rotate-180' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          </button>
+          {filtersExpanded && (
+            <div className="px-4 pb-4">
+              <div className="flex flex-col gap-2">
+                {renderRatingSelector('length', 'Length')}
+                {renderRatingSelector('thickness', 'Thickness')}
+                {renderRatingSelector('crispiness', 'Crispiness')}
+                {renderRatingSelector('saltiness', 'Saltiness')}
+                {renderRatingSelector('darkness', 'Color')}
+                {/* Fry type tags filter UI (moved below other filters, matches PostForm) */}
+                <div className="mt-2">
+                  <h3 className="text-lg font-bold mb-2 font-baloo2">Category</h3>
+                  <TagTypeDropdown
+                    allFryTypes={allFryTypes}
+                    selectedTags={typeTags}
+                    setSelectedTags={setTypeTags}
+                    placeholder="Type of fries"
+                    className="z-50"
+                  />
+                </div>
+                {/* End fry type tags filter UI */}
               </div>
-              {/* End fry type tags filter UI */}
             </div>
-          </div>
-        </div>
-        {/* Results Section */}
-        <h2 className="text-lg font-bold mb-4 font-baloo2">Search Results</h2>
-        <div className="space-y-4 z-0 relative">
-          {filteredLocations.length === 0 ? (
-            <div className="overflow-hidden rounded-xl text-center py-12 px-6" style={{ borderWidth: '3px', borderStyle: 'solid', borderColor: 'black', backgroundColor: 'var(--light-blue-custom)' }}>
-              <p className="text-gray-800 font-baloo2 text-lg">No locations match your filters. Try adjusting your criteria.</p>
-            </div>
-          ) : (
-            filteredLocations.map((location) => (
-              <SearchResult
-                key={location.id}
-                location={location}
-                selectedCategories={selectedCategories}
-                createLocationSlug={createLocationSlug}
-                images={locationImages[location.name] || []}
-                expanded={expandedCard === location.id}
-                onExpand={() => {
-                  setExpandedCard(expandedCard === location.id ? null : location.id);
-                  if (!locationImages[location.name]) {
-                    fetchLocationImages(location.name);
-                  }
-                }}
-              />
-            ))
           )}
         </div>
+        {/* No Results Message - shown directly below Filter container */}
+        {filteredLocations.length === 0 && (
+          <div className="mb-6 overflow-hidden rounded-xl text-center py-12 px-6" style={{ borderWidth: '3px', borderStyle: 'solid', borderColor: 'black', backgroundColor: 'var(--light-blue-custom)' }}>
+            <p className="text-gray-800 font-baloo2 text-lg">No locations match your filters. Try adjusting your criteria.</p>
+          </div>
+        )}
+        {/* Map Section */}
+        {filteredLocations.length > 0 && (
+          <div className="mb-6">
+            <LocationMap locations={locations} filteredLocations={filteredLocations} />
+          </div>
+        )}
+        {/* Results Section */}
+        {filteredLocations.length > 0 && (
+          <>
+            <h2 className="text-lg font-bold mb-4 font-baloo2">Search Results</h2>
+            <div className="space-y-4 z-0 relative">
+              {filteredLocations.map((location) => (
+                <SearchResult
+                  key={location.id}
+                  location={location}
+                  selectedCategories={selectedCategories}
+                  createLocationSlug={createLocationSlug}
+                  images={locationImages[location.name] || []}
+                  expanded={expandedCard === location.id}
+                  onExpand={() => {
+                    setExpandedCard(expandedCard === location.id ? null : location.id);
+                    if (!locationImages[location.name]) {
+                      fetchLocationImages(location.name);
+                    }
+                  }}
+                />
+              ))}
+            </div>
+          </>
+        )}
       </main>
     </>
   );
