@@ -39,7 +39,10 @@ export default function PostForm() {
     crispiness: 0,
     saltiness: 0,
     darkness: 0,
-    overall: 0
+    overall: 0,
+    locationPlaceId: null,
+    locationLat: null,
+    locationLng: null
   });
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -239,7 +242,7 @@ export default function PostForm() {
       if (!autocompleteRef.current) {
         const autocomplete = new window.google.maps.places.Autocomplete(input, {
           componentRestrictions: { country: 'us' },
-          fields: ['name', 'formatted_address'],
+          fields: ['name', 'formatted_address', 'geometry', 'place_id'],
           types: ['establishment'],
           bounds: {
             north: 40.9176,
@@ -304,7 +307,18 @@ export default function PostForm() {
               ? `${place.name}, ${place.formatted_address}`
               : place.formatted_address || place.name || '';
             
-            setFormData(prev => ({ ...prev, locationName }));
+            // Extract coordinates from place geometry
+            const lat = place.geometry?.location?.lat();
+            const lng = place.geometry?.location?.lng();
+            const placeId = place.place_id;
+            
+            setFormData(prev => ({ 
+              ...prev, 
+              locationName,
+              locationPlaceId: placeId || null,
+              locationLat: lat || null,
+              locationLng: lng || null
+            }));
             setError('');
           }
         });
@@ -507,6 +521,35 @@ export default function PostForm() {
 
       if (locationSnapshot.empty) {
         console.log('Creating new location document for:', formData.locationName);
+        
+        // If coordinates aren't available, try to geocode the location name
+        let finalLat = formData.locationLat;
+        let finalLng = formData.locationLng;
+        let finalPlaceId = formData.locationPlaceId;
+
+        if ((!finalLat || !finalLng) && isGoogleMapsLoaded && window.google?.maps?.Geocoder) {
+          try {
+            const geocoder = new window.google.maps.Geocoder();
+            const geocodeResult = await new Promise((resolve, reject) => {
+              geocoder.geocode({ address: formData.locationName }, (results, status) => {
+                if (status === 'OK' && results[0]) {
+                  resolve(results[0]);
+                } else {
+                  resolve(null);
+                }
+              });
+            });
+
+            if (geocodeResult) {
+              finalLat = geocodeResult.geometry.location.lat();
+              finalLng = geocodeResult.geometry.location.lng();
+              finalPlaceId = geocodeResult.place_id;
+            }
+          } catch (geocodeError) {
+            console.error('Error geocoding location:', geocodeError);
+          }
+        }
+
         const locationData = {
           name: formData.locationName,
           totalReviews: 1,
@@ -517,7 +560,12 @@ export default function PostForm() {
           averageSaltiness: formData.saltiness || 0,
           averageDarkness: formData.darkness || 0,
           recentImages: [{ imageUrl, username: user?.displayName || 'Anonymous' }],
-          lastUpdated: new Date().toISOString()
+          lastUpdated: new Date().toISOString(),
+          ...(finalLat && finalLng && {
+            latitude: finalLat,
+            longitude: finalLng,
+            placeId: finalPlaceId
+          })
         };
         console.log('New location data:', locationData);
         try {
@@ -555,6 +603,45 @@ export default function PostForm() {
           lastUpdated: new Date().toISOString(),
           recentImages,
         };
+
+        // Add coordinates if they don't exist
+        if (!locationData.latitude || !locationData.longitude) {
+          let finalLat = formData.locationLat;
+          let finalLng = formData.locationLng;
+          let finalPlaceId = formData.locationPlaceId;
+
+          // If coordinates aren't in form data, try to geocode
+          if ((!finalLat || !finalLng) && isGoogleMapsLoaded && window.google?.maps?.Geocoder) {
+            try {
+              const geocoder = new window.google.maps.Geocoder();
+              const geocodeResult = await new Promise((resolve, reject) => {
+                geocoder.geocode({ address: formData.locationName }, (results, status) => {
+                  if (status === 'OK' && results[0]) {
+                    resolve(results[0]);
+                  } else {
+                    resolve(null);
+                  }
+                });
+              });
+
+              if (geocodeResult) {
+                finalLat = geocodeResult.geometry.location.lat();
+                finalLng = geocodeResult.geometry.location.lng();
+                finalPlaceId = geocodeResult.place_id;
+              }
+            } catch (geocodeError) {
+              console.error('Error geocoding location:', geocodeError);
+            }
+          }
+
+          if (finalLat && finalLng) {
+            updateData.latitude = finalLat;
+            updateData.longitude = finalLng;
+            if (finalPlaceId) {
+              updateData.placeId = finalPlaceId;
+            }
+          }
+        }
         console.log('Location update data:', updateData);
         try {
           await updateDoc(locationDoc.ref, updateData);
@@ -838,7 +925,10 @@ export default function PostForm() {
       crispiness: 0,
       saltiness: 0,
       darkness: 0,
-      overall: 0
+      overall: 0,
+      locationPlaceId: null,
+      locationLat: null,
+      locationLng: null
     });
     setError('');
     setFormSubmitted(true);

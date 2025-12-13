@@ -49,8 +49,6 @@ export default function SearchResult({ location, selectedCategories, createLocat
                   borderStyle: 'solid', 
                   borderColor: 'var(--red-custom)' 
                 }}
-                onMouseEnter={(e) => e.target.style.color = 'var(--yellow-custom)'}
-                onMouseLeave={(e) => e.target.style.color = 'var(--red-custom)'}
                 onClick={e => e.stopPropagation()}
               >
                 <span className="text-sm">FULL PROFILE</span>
@@ -66,8 +64,6 @@ export default function SearchResult({ location, selectedCategories, createLocat
                   borderStyle: 'solid', 
                   borderColor: 'black' 
                 }}
-                onMouseEnter={(e) => e.target.style.color = 'var(--yellow-custom)'}
-                onMouseLeave={(e) => e.target.style.color = 'black'}
                 onClick={e => e.stopPropagation()}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

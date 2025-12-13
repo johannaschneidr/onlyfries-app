@@ -83,23 +83,23 @@ export default function ChangePassword() {
         >
           <h1 className="text-4xl font-bold mb-3 font-rouge-script" style={{ color: 'var(--blue-custom)' }}>Change Password</h1>
           <MessageAlert type="error" message={error} className="mb-4 mt-6" />
-          <MessageAlert type="success" message={success} className="mb-4" />
-          
+        <MessageAlert type="success" message={success} className="mb-4" />
+
           <form onSubmit={handlePasswordUpdate} className="space-y-6 mt-6">
             <div>
               <label htmlFor="currentPassword" className="block text-lg font-medium text-gray-700 mb-2 font-baloo2">
                 Current Password
               </label>
               <div className="relative">
-                <input
+              <input
                   type={showCurrentPassword ? "text" : "password"}
-                  id="currentPassword"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
+                id="currentPassword"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
                   className="block w-full rounded-full border-2 border-gray-300 shadow-sm text-lg h-14 px-6 pr-12 font-baloo2 focus:outline-none"
                   style={{ borderColor: '#D1D5DB' }}
-                  placeholder="••••••••"
-                />
+                placeholder="••••••••"
+              />
                 <button
                   type="button"
                   onClick={() => setShowCurrentPassword(!showCurrentPassword)}
@@ -124,16 +124,16 @@ export default function ChangePassword() {
                 New Password
               </label>
               <div className="relative">
-                <input
+              <input
                   type={showNewPassword ? "text" : "password"}
-                  id="newPassword"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
+                id="newPassword"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
                   className="block w-full rounded-full border-2 border-gray-300 shadow-sm text-lg h-14 px-6 pr-12 font-baloo2 focus:outline-none"
                   style={{ borderColor: '#D1D5DB' }}
-                  placeholder="••••••••"
-                  minLength={6}
-                />
+                placeholder="••••••••"
+                minLength={6}
+              />
                 <button
                   type="button"
                   onClick={() => setShowNewPassword(!showNewPassword)}
@@ -161,16 +161,16 @@ export default function ChangePassword() {
                 Confirm New Password
               </label>
               <div className="relative">
-                <input
+              <input
                   type={showConfirmPassword ? "text" : "password"}
-                  id="confirmPassword"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
+                id="confirmPassword"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
                   className="block w-full rounded-full border-2 border-gray-300 shadow-sm text-lg h-14 px-6 pr-12 font-baloo2 focus:outline-none"
                   style={{ borderColor: '#D1D5DB' }}
-                  placeholder="••••••••"
-                  minLength={6}
-                />
+                placeholder="••••••••"
+                minLength={6}
+              />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}

@@ -33,10 +33,10 @@ export default function LoginModal({ isOpen, onClose }) {
             Log in or Sign up
           </PrimaryButton>
           <SecondaryButton
-            onClick={onClose}
+          onClick={onClose}
             className="w-full"
-          >
-            Cancel
+        >
+          Cancel
           </SecondaryButton>
         </div>
       </div>
