@@ -10,6 +10,7 @@ export default function LocationMap({ locations, filteredLocations }) {
   const [clusterMarkers, setClusterMarkers] = useState([]);
   const [mapZoom, setMapZoom] = useState(12);
   const infoWindowsRef = useRef([]);
+  const previousLocationsRef = useRef(null);
   const { isLoaded, error } = useGoogleMaps();
 
   // Helper to create slug from location name
@@ -493,8 +494,20 @@ export default function LocationMap({ locations, filteredLocations }) {
     setClusterMarkers(newClusterMarkers);
     infoWindowsRef.current = newInfoWindows;
 
-    // Fit map bounds to show all markers/clusters
-    if (newMarkers.length > 0 || newClusterMarkers.length > 0) {
+    // Check if locations have actually changed (not just zoom)
+    // Create a simple string representation for comparison
+    const currentLocationsKey = filteredLocations
+      .filter(loc => loc.latitude && loc.longitude)
+      .map(loc => `${loc.id || loc.name || ''}-${loc.latitude}-${loc.longitude}`)
+      .sort()
+      .join('|');
+    
+    const previousLocationsKey = previousLocationsRef.current;
+    const locationsChanged = previousLocationsKey === null || previousLocationsKey !== currentLocationsKey;
+
+    // Fit map bounds to show all markers/clusters only when locations change
+    // Don't fit bounds when zoom changes, as that would reset the user's zoom level
+    if ((newMarkers.length > 0 || newClusterMarkers.length > 0) && locationsChanged) {
       const bounds = new window.google.maps.LatLngBounds();
       newMarkers.forEach(marker => {
         bounds.extend(marker.getPosition());
@@ -515,6 +528,9 @@ export default function LocationMap({ locations, filteredLocations }) {
         }, 100);
       }
     }
+
+    // Update the previous locations reference
+    previousLocationsRef.current = currentLocationsKey;
   }, [map, filteredLocations, mapZoom]);
 
   if (error) {
