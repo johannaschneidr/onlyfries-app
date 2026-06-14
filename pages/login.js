@@ -5,10 +5,12 @@ import { doc, setDoc, getDoc, collection, query, where, getDocs } from 'firebase
 import { auth, db } from '../lib/firebase';
 import Navbar from '../components/navbar';
 import MessageAlert from '../components/MessageAlert';
+import PrimaryButton from '../components/PrimaryButton';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
+  const [emailError, setEmailError] = useState('');
   const router = useRouter();
   const { redirect } = router.query;
 
@@ -36,9 +38,16 @@ export default function Login() {
   const handleEmailSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    
+    setEmailError('');
+
     if (!email) {
-      setError('Please enter your email');
+      setEmailError('Please enter your email address.');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setEmailError('That doesn\'t look like a valid email address.');
       return;
     }
 
@@ -115,63 +124,42 @@ export default function Login() {
     <>
       <Navbar />
       <main className="max-w-md mx-auto p-4">
+        <h1 className="text-6xl font-bold font-rouge-script text-center text-white mb-8" style={{ lineHeight: '1' }}>Log in or sign up</h1>
         {/* Main content section with white background */}
-        <div className="bg-white rounded-xl overflow-hidden"
+        <div className="bg-white rounded-xl overflow-hidden mb-8"
           style={{
             borderWidth: '3px',
             borderStyle: 'solid',
             borderColor: 'black'
           }}
         >
-          <div className="px-6 pt-6">
-            <h1 className="text-4xl font-bold mb-2 font-rouge-script" style={{ color: 'var(--blue-custom)' }}>Log in or sign up</h1>
-          </div>
-          <div className="px-6 pb-4 pt-4">
+          <div className="px-6 pt-4 pb-2">
             <MessageAlert type="error" message={error} className="mb-2" />
           </div>
-          <form onSubmit={handleEmailSubmit} className="noValidate">
-            <div>
-              <div className="relative px-4 mb-8 pt-0">
+          <form onSubmit={handleEmailSubmit} noValidate>
+            <div className="px-6 pb-6">
+              <label htmlFor="email" className="block text-lg font-medium text-gray-700 mb-2 font-baloo2">
+                Enter your email
+              </label>
+              <div>
                 <input
                   type="email"
                   id="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="block w-full text-lg h-auto py-0 pl-2 font-baloo2 focus:outline-none border-0"
-                  placeholder="Enter your email"
+                  onChange={(e) => { setEmail(e.target.value); setEmailError(''); }}
+                  className="block w-full rounded-full text-lg h-14 px-6 font-baloo2 focus:outline-none"
+                  style={{ borderWidth: '2px', borderStyle: 'solid', borderColor: emailError ? 'var(--red-custom)' : '#D1D5DB' }}
+                  placeholder="you@example.com"
                 />
+                {emailError && (
+                  <p className="mt-2 text-sm font-baloo2" style={{ color: 'var(--red-custom)' }}>{emailError}</p>
+                )}
                 {email && (
-                  <button
-                    type="submit"
-                    className="absolute right-4 w-10 h-10 rounded-full text-white flex items-center justify-center focus:outline-none"
-                    style={{ 
-                      backgroundColor: 'var(--yellow-custom)',
-                      borderWidth: '3px',
-                      borderStyle: 'solid',
-                      borderColor: 'var(--red-custom)',
-                      top: '50%',
-                      transform: 'translateY(-50%)'
-                    }}
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth={2.5}
-                      stroke="currentColor"
-                      className="w-5 h-5"
-                      style={{ color: 'var(--red-custom)' }}
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"
-                      />
-                    </svg>
-                  </button>
+                  <div className="mt-4">
+                    <PrimaryButton type="submit" className="w-full">Continue</PrimaryButton>
+                  </div>
                 )}
               </div>
-              <div className="w-full" style={{ borderBottomWidth: '3px', borderBottomStyle: 'solid', borderBottomColor: 'black' }}></div>
             </div>
           </form>
 

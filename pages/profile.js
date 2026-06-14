@@ -93,18 +93,18 @@ export default function Profile() {
     <>
       <Navbar />
       <main className="max-w-md mx-auto p-4">
-        <div className="bg-white rounded-xl p-6"
+        <h1 className="text-5xl font-bold font-rouge-script text-center text-white mb-8" style={{ lineHeight: '1' }}>Profile Settings</h1>
+        <div className="bg-white rounded-xl pt-3 pb-6 px-6"
           style={{
             borderWidth: '3px',
             borderStyle: 'solid',
             borderColor: 'black'
           }}
         >
-          <h1 className="text-4xl font-bold mb-3 font-rouge-script" style={{ color: 'var(--blue-custom)' }}>Profile Settings</h1>
           <MessageAlert type="error" message={error} className="mb-4 mt-6" />
           <MessageAlert type="success" message={success} className="mb-4" />
           
-          <div className="space-y-6 mt-6">
+          <div className="space-y-6 mt-2">
             <div>
               <label className="block text-lg font-medium text-gray-700 mb-2 font-baloo2">Username</label>
               {isEditingUsername ? (

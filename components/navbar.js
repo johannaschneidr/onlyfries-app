@@ -26,6 +26,7 @@ export default function Navbar({ onLogoClick, isRefreshing = false }) {
   };
 
   const handleLogoutClick = () => {
+    setIsMenuOpen(false);
     setShowLogoutConfirm(true);
   };
 
@@ -51,7 +52,7 @@ export default function Navbar({ onLogoClick, isRefreshing = false }) {
       await logout();
       setShowLogoutConfirm(false);
       closeMenu();
-      router.push('/');
+      router.push('/?loggedOut=1');
     } catch (error) {
       console.error('Error logging out:', error);
     }

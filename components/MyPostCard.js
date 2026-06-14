@@ -236,7 +236,7 @@ export default function MyPostCard({ post }) {
                 </svg>
               </button>
               {showMenu && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10" style={{ borderWidth: '3px', borderStyle: 'solid', borderColor: 'black' }}>
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10" style={{ borderWidth: '3px', borderStyle: 'solid', borderColor: 'var(--red-custom)' }}>
                   <button
                     onClick={() => {
                       setShowDeleteModal(true);

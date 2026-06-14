@@ -8,12 +8,26 @@ import { db } from '../lib/firebase';
 import { collection, query, orderBy, onSnapshot, getDocs } from 'firebase/firestore';
 import LoginModal from '../components/LoginModal';
 import PrimaryButton from '../components/PrimaryButton';
+import RedButton from '../components/RedButton';
+import MessageAlert from '../components/MessageAlert';
+import { useRouter } from 'next/router';
+import Link from 'next/link';
 
 export default function Home() {
+  const router = useRouter();
   const [posts, setPosts] = useState([]);
   const [displayedPostsCount, setDisplayedPostsCount] = useState(10);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [logoutSuccess, setLogoutSuccess] = useState(false);
+
+  useEffect(() => {
+    if (router.query.loggedOut) {
+      setLogoutSuccess(true);
+      router.replace('/', undefined, { shallow: true });
+      setTimeout(() => setLogoutSuccess(false), 5000);
+    }
+  }, [router.query.loggedOut]);
   const [pullDistance, setPullDistance] = useState(0);
   const touchStartY = useRef(0);
   const touchCurrentY = useRef(0);
@@ -128,6 +142,15 @@ export default function Home() {
 
   return (
     <>
+      {logoutSuccess && (
+        <div className="fixed top-0 left-0 right-0 z-[10000] px-4 pt-4">
+          <MessageAlert
+            type="success"
+            message="You've been logged out successfully."
+            onClose={() => setLogoutSuccess(false)}
+          />
+        </div>
+      )}
       <LoginModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} />
       <Navbar onLogoClick={refreshPosts} isRefreshing={isRefreshing} />
       <Header />
@@ -153,6 +176,11 @@ export default function Home() {
         <div className="mb-12 mt-8">
           <h2 className="text-4xl font-bold mb-3 font-rouge-script" style={{ color: 'var(--yellow-custom)' }}>True and Tested</h2>
           <Leaderboard />
+          <div className="flex justify-center mt-4">
+            <Link href="/search">
+              <RedButton>Explore the Map</RedButton>
+            </Link>
+          </div>
         </div>
         <h1 className="text-4xl font-bold mb-3 font-rouge-script" style={{ color: 'var(--yellow-custom)' }}>New to the party</h1>
         <div className="grid gap-6">

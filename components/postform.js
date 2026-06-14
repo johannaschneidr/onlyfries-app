@@ -4,7 +4,7 @@ import SecondaryButton from './SecondaryButton';
 import TertiaryButton from './TertiaryButton';
 import { storage, db } from '../lib/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { collection, addDoc, query, where, getDocs, updateDoc, arrayUnion } from 'firebase/firestore';
+import { collection, addDoc, query, where, getDocs, updateDoc, arrayUnion, onSnapshot, doc } from 'firebase/firestore';
 import { useRouter } from 'next/router';
 import { useGoogleMaps } from '../hooks/useGoogleMaps';
 import { useAuth } from '../contexts/AuthContext';
@@ -26,7 +26,7 @@ export default function PostForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [formSubmitted, setFormSubmitted] = useState(false);
-  const [showAnonymousWarning, setShowAnonymousWarning] = useState(false);
+  const [showModerationModal, setShowModerationModal] = useState(false);
   const [showNavigationWarning, setShowNavigationWarning] = useState(false);
   const [pendingNavigation, setPendingNavigation] = useState(null);
   const [formData, setFormData] = useState({
@@ -467,6 +467,30 @@ export default function PostForm() {
     setCurrentPage(currentPage - 1);
   };
 
+  const resetForm = () => {
+    setShowModerationModal(false);
+    setCurrentPage(1);
+    setImage(null);
+    setPreview('');
+    setError('');
+    setFormSubmitted(false);
+    setFormData({
+      locationName: '',
+      menuName: '',
+      types: [],
+      description: '',
+      length: 0,
+      thickness: 0,
+      crispiness: 0,
+      saltiness: 0,
+      darkness: 0,
+      overall: 0,
+      locationPlaceId: null,
+      locationLat: null,
+      locationLng: null
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setFormSubmitted(true);
@@ -483,7 +507,7 @@ export default function PostForm() {
     }
 
     if (!user) {
-      setShowAnonymousWarning(true);
+      handleLoginRedirect();
       return;
     }
 
@@ -652,13 +676,29 @@ export default function PostForm() {
         }
       }
 
-      router.push('/');
+      // Watch for moderation deletion before navigating away.
+      // If the Cloud Function flags and removes the post, show the modal.
+      // If the post survives 12s, it passed — navigate home.
+      const unsubscribe = onSnapshot(doc(db, 'posts', postDoc.id), (snapshot) => {
+        if (!snapshot.exists()) {
+          clearTimeout(moderationTimeout);
+          unsubscribe();
+          setLoading(false);
+          setShowModerationModal(true);
+        }
+      });
+      const moderationTimeout = setTimeout(() => {
+        unsubscribe();
+        setLoading(false);
+        router.push('/');
+      }, 12000);
+
     } catch (error) {
       console.error('Error in handleSubmit:', error);
       setError('Error submitting post. Please try again.');
-    } finally {
       setLoading(false);
     }
+    // Note: setLoading(false) is handled by the moderation snapshot/timeout above
   };
 
   // Star Rating Component
@@ -980,34 +1020,29 @@ export default function PostForm() {
         </div>
       )}
 
-      {/* Anonymous Post Warning Modal */}
-      {showAnonymousWarning && (
+      {/* Moderation Modal */}
+      {showModerationModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-xl">
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Posting Anonymously</h3>
-            <p className="text-gray-600 mb-6">
-              You are not logged in to an account. This post will be submitted anonymously and can't be reclaimed by you if you proceed. If you want to post this under an account, please log in or sign up.
+          <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 relative" style={{ borderWidth: '3px', borderStyle: 'solid', borderColor: 'black' }}>
+            <button
+              onClick={resetForm}
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition-colors"
+              aria-label="Close"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            <h3 className="text-4xl font-bold mb-3 font-rouge-script" style={{ color: 'var(--red-custom)' }}>Oops!</h3>
+            <p className="text-lg mb-6 font-baloo2 text-gray-700">
+              That didn&apos;t quite look like fries to us. Only fry pics allowed here — give it another shot!
             </p>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={handleLoginRedirect}
-                className="px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors"
-                style={{ backgroundColor: 'var(--yellow-custom)' }}
-                onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--yellow-custom)'}
-                onMouseLeave={(e) => e.target.style.backgroundColor = 'var(--yellow-custom)'}
-              >
-                Log in / Sign up
-              </button>
-              <button
-                onClick={() => {
-                  setShowAnonymousWarning(false);
-                  submitPost();
-                }}
-                className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-              >
-                Proceed anonymously
-              </button>
-            </div>
+            <PrimaryButton
+              onClick={resetForm}
+              className="w-full"
+            >
+              Try again
+            </PrimaryButton>
           </div>
         </div>
       )}
@@ -1016,52 +1051,83 @@ export default function PostForm() {
         {currentPage === 1 && (
           <div className="flex flex-col items-center justify-center min-h-[60vh]">
             <div className="w-full max-w-md">
-              <div className="relative">
-                <input
-                  ref={imageInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="hidden"
-                  required
-                />
-                {!preview ? (
-                  <div 
-                    onClick={() => imageInputRef.current?.click()}
-                    className="border-2 border-dashed border-gray-300 rounded-md p-8 text-center cursor-pointer transition-colors bg-white/60 backdrop-blur-sm"
-                    onMouseEnter={(e) => e.target.style.borderColor = 'var(--yellow-custom)'}
-                    onMouseLeave={(e) => e.target.style.borderColor = '#D1D5DB'}
-                  >
-                    <div className="flex flex-col items-center justify-center">
-                      <svg className="w-20 h-20 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                      <p className="text-lg text-gray-600">Tap to take a photo or choose from library</p>
-                      <p className="text-sm text-gray-500 mt-2">PNG, JPG up to 5MB</p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="relative">
-                    <img 
-                      src={preview} 
-                      alt="Preview" 
-                      className="w-full h-64 object-cover rounded-md"
-                    />
-                    <button
-                      type="button"
-                      onClick={removeImage}
-                      className="absolute top-3 right-3 bg-white/80 hover:bg-white text-gray-800 rounded-full p-3 shadow-lg"
+              <div
+                className="rounded-xl p-4 mb-6"
+                style={{
+                  borderWidth: '3px',
+                  borderStyle: 'solid',
+                  borderColor: 'black',
+                  backgroundColor: '#DFEEFF'
+                }}
+              >
+                <div className="relative">
+                  <input
+                    ref={imageInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="hidden"
+                    required
+                  />
+                  {!preview ? (
+                    <div
+                      onClick={() => imageInputRef.current?.click()}
+                      className="border-dashed rounded-md p-8 text-center cursor-pointer"
+                      style={{ borderWidth: '3px', borderColor: 'var(--blue-custom)' }}
                     >
-                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-                )}
+                      <div className="flex flex-col items-center justify-center">
+                        <div className="relative mb-4">
+                          <div className="absolute inset-0 rounded-full blur-lg" style={{ backgroundColor: 'var(--yellow-custom)', opacity: 0.1 }} />
+                          <svg
+                            className="w-20 h-20 relative z-10"
+                            fill="currentColor"
+                            viewBox="0 0 24 24"
+                            style={{ color: 'black' }}
+                          >
+                            <path d="M4 4H8L10 6H14L16 4H20C21.1 4 22 4.9 22 6V18C22 19.1 21.1 20 20 20H4C2.9 20 2 19.1 2 18V6C2 4.9 2.9 4 4 4ZM12 17C14.76 17 17 14.76 17 12S14.76 7 12 7S7 9.24 7 12S9.24 17 12 17ZM12 9C13.66 9 15 10.34 15 12S13.66 15 12 15S9 13.66 9 12S10.34 9 12 9ZM18 8H20V6H18V8Z" />
+                          </svg>
+                        </div>
+                        <div
+                          className="inline-block px-10 py-2 rounded-full mt-2"
+                          style={{
+                            borderWidth: '3px',
+                            borderStyle: 'solid',
+                            borderColor: 'var(--red-custom)',
+                            backgroundColor: 'var(--yellow-custom)'
+                          }}
+                        >
+                          <p className="text-2xl font-medium font-quattrocento underline whitespace-nowrap" style={{ color: 'var(--red-custom)' }}>
+                            RATE YOUR FRIES
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="relative">
+                        <img
+                          src={preview}
+                          alt="Preview"
+                          className="w-full h-64 object-cover rounded-md"
+                          style={{ borderWidth: '3px', borderStyle: 'solid', borderColor: 'black' }}
+                        />
+                        <button
+                          type="button"
+                          onClick={removeImage}
+                          className="absolute top-3 right-3 bg-white hover:bg-gray-100 text-gray-800 rounded-full p-3 shadow-lg"
+                          style={{ borderWidth: '2px', borderStyle: 'solid', borderColor: 'black' }}
+                        >
+                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
+                      <PrimaryButton onClick={handleNext} className="w-full">Looks hottt</PrimaryButton>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-            <PrimaryButton onClick={handleNext} disabled={!preview} className="mt-8">Rate</PrimaryButton>
           </div>
         )}
 
@@ -1069,10 +1135,10 @@ export default function PostForm() {
           <div className="space-y-0">
             <div 
               className="rounded-t-xl rounded-b-none"
-              style={{ borderWidth: '3px', borderStyle: 'solid', borderColor: 'black', backgroundColor: 'var(--light-blue-custom)', borderBottom: 'none' }}
+              style={{ borderWidth: '3px', borderStyle: 'solid', borderColor: 'black', backgroundColor: 'var(--yellow-custom)', borderBottom: 'none' }}
             >
-              <div className="p-4 sm:p-6">
-                <h1 className="text-4xl font-bold font-rouge-script" style={{ color: 'var(--yellow-custom)' }}>1 - The Gist</h1>
+              <div className="px-4 py-2 sm:px-6">
+                <h1 className="text-lg font-bold font-baloo2" style={{ color: 'black' }}>Step 1: The Gist</h1>
               </div>
             </div>
             <div className="bg-white rounded-b-xl rounded-t-none" style={{ borderWidth: '3px', borderStyle: 'solid', borderColor: 'black' }}>
@@ -1220,10 +1286,10 @@ export default function PostForm() {
           <div className="space-y-0">
             <div 
               className="rounded-t-xl rounded-b-none"
-              style={{ borderWidth: '3px', borderStyle: 'solid', borderColor: 'black', backgroundColor: 'var(--light-blue-custom)', borderBottom: 'none' }}
+              style={{ borderWidth: '3px', borderStyle: 'solid', borderColor: 'black', backgroundColor: 'var(--yellow-custom)', borderBottom: 'none' }}
             >
-              <div className="p-4 sm:p-6">
-                <h1 className="text-4xl font-bold font-rouge-script" style={{ color: 'var(--yellow-custom)' }}>2 - The Details</h1>
+              <div className="px-4 py-2 sm:px-6">
+                <h1 className="text-lg font-bold font-baloo2" style={{ color: 'black' }}>Step 2: The Details</h1>
               </div>
             </div>
             <div className="bg-white rounded-b-xl rounded-t-none" style={{ borderWidth: '3px', borderStyle: 'solid', borderColor: 'black' }}>
@@ -1298,10 +1364,10 @@ export default function PostForm() {
           <div className="space-y-0">
             <div 
               className="rounded-t-xl rounded-b-none"
-              style={{ borderWidth: '3px', borderStyle: 'solid', borderColor: 'black', backgroundColor: 'var(--light-blue-custom)', borderBottom: 'none' }}
+              style={{ borderWidth: '3px', borderStyle: 'solid', borderColor: 'black', backgroundColor: 'var(--yellow-custom)', borderBottom: 'none' }}
             >
-              <div className="p-4 sm:p-6">
-                <h1 className="text-4xl font-bold font-rouge-script" style={{ color: 'var(--yellow-custom)' }}>3 - The Finishing Touch</h1>
+              <div className="px-4 py-2 sm:px-6">
+                <h1 className="text-lg font-bold font-baloo2" style={{ color: 'black' }}>Step 3: The Finishing Touch</h1>
               </div>
             </div>
             <div className="bg-white rounded-b-xl rounded-t-none" style={{ borderWidth: '3px', borderStyle: 'solid', borderColor: 'black' }}>
