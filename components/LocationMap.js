@@ -23,10 +23,11 @@ export default function LocationMap({ locations, filteredLocations }) {
     if (!isLoaded || !mapRef.current) return;
 
     const googleMap = new window.google.maps.Map(mapRef.current, {
-      center: { lat: 40.7549, lng: -73.9950 }, // Default to Midtown Manhattan
+      center: { lat: 40.7549, lng: -73.9950 },
       zoom: 12,
-      minZoom: 11, // Prevent zooming out too far
-      maxZoom: 18, // Prevent zooming in too close
+      minZoom: 11,
+      maxZoom: 18,
+      gestureHandling: 'greedy',
       restriction: {
         latLngBounds: {
           north: 40.9176, // Northern boundary of NYC
