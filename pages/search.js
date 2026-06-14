@@ -8,6 +8,7 @@ import LocationMap from '../components/LocationMap';
 import { collection, query as firestoreQuery, where, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import TagTypeDropdown from '../components/TagTypeDropdown';
+import PrimaryButton from '../components/PrimaryButton';
 
 const ratingDescriptors = {
   length: {
@@ -136,6 +137,18 @@ export default function SearchPage() {
   // Calculate total active filters
   const activeFiltersCount = selectedCategories.length + typeTags.length;
 
+  const [displayedCount, setDisplayedCount] = useState(8);
+
+  // Reset displayed count when filters change
+  useEffect(() => {
+    setDisplayedCount(8);
+  }, [filters, typeTags]);
+
+  const clearAllFilters = () => {
+    setFilters({ length: 0, thickness: 0, crispiness: 0, saltiness: 0, darkness: 0 });
+    setTypeTags([]);
+  };
+
   // Helper to calculate match score (lower is better)
   const getMatchScore = (location) => {
     let score = 0;
@@ -191,7 +204,7 @@ export default function SearchPage() {
                   ? 'text-white' 
                   : 'text-gray-700'
                 }`}
-              style={filters[category] === num ? { backgroundColor: 'var(--blue-custom)' } : { backgroundColor: 'white' }}
+              style={filters[category] === num ? { backgroundColor: 'var(--blue-custom)' } : { backgroundColor: '#D1D5DB' }}
               aria-label={`Set ${label} to ${num}`}
             >
               {/* No number shown */}
@@ -304,28 +317,21 @@ export default function SearchPage() {
     <>
       <Navbar />
       <main className="max-w-4xl mx-auto p-4">
-        <h1 className="text-4xl font-bold mb-6 font-rouge-script" style={{ color: 'var(--yellow-custom)' }}>Find Your Perfect Fries</h1>
-        {/* Filters Section - now at the top */}
-        <div className="overflow-hidden rounded-xl mb-6" style={{ borderWidth: '3px', borderStyle: 'solid', borderColor: 'black', backgroundColor: '#DFEEFF' }}>
+        <h1 className="text-6xl font-bold mb-6 font-rouge-script text-white text-center" style={{ lineHeight: '0.9' }}>Find your <span style={{ color: 'var(--light-blue-custom)' }}>perfect</span> match</h1>
+        {/* Map Section */}
+        <div className="mb-4">
+          <LocationMap locations={locations} filteredLocations={filteredLocations} />
+        </div>
+        {/* Filters Section */}
+        <div className="overflow-hidden rounded-xl mb-6" style={{ borderWidth: '3px', borderStyle: 'solid', borderColor: 'black' }}>
           <button
             onClick={() => setFiltersExpanded(!filtersExpanded)}
             className="w-full px-4 py-4 flex items-center justify-between transition-colors"
-            style={{ backgroundColor: 'transparent' }}
+            style={{ backgroundColor: 'var(--yellow-custom)' }}
             aria-label={filtersExpanded ? 'Collapse filters' : 'Expand filters'}
           >
-            <h2 className="text-lg font-bold font-baloo2">Filter Search</h2>
-            <div className="flex items-center gap-2">
-              {!filtersExpanded && activeFiltersCount > 0 && (
-                <span 
-                  className="px-2.5 py-1.5 text-sm font-bold rounded-full font-baloo2"
-                  style={{ 
-                    backgroundColor: 'var(--red-custom)', 
-                    color: 'var(--yellow-custom)'
-                  }}
-                >
-                  {activeFiltersCount} selected
-                </span>
-              )}
+            <h2 className="text-lg font-bold font-baloo2 whitespace-nowrap">Looking for something specific?</h2>
+            <div className="flex items-center gap-2 flex-shrink-0">
               <svg
                 className={`w-5 h-5 transition-transform ${filtersExpanded ? 'rotate-180' : ''}`}
                 fill="none"
@@ -337,16 +343,26 @@ export default function SearchPage() {
             </div>
           </button>
           {filtersExpanded && (
-            <div className="px-4 pb-4">
+            <div className="px-4 pt-4 pb-4" style={{ backgroundColor: 'white', borderTop: '3px solid black' }}>
+              <div className="flex justify-start mb-4">
+                {activeFiltersCount > 0 && (
+                  <button
+                    onClick={clearAllFilters}
+                    className="text-sm font-medium font-baloo2 underline"
+                    style={{ color: 'var(--red-custom)' }}
+                  >
+                    Deselect all
+                  </button>
+                )}
+              </div>
               <div className="flex flex-col gap-2">
                 {renderRatingSelector('length', 'Length')}
                 {renderRatingSelector('thickness', 'Thickness')}
                 {renderRatingSelector('crispiness', 'Crispiness')}
                 {renderRatingSelector('saltiness', 'Saltiness')}
                 {renderRatingSelector('darkness', 'Color')}
-                {/* Fry type tags filter UI (moved below other filters, matches PostForm) */}
                 <div className="mt-2">
-                  <h3 className="text-lg font-bold mb-2 font-baloo2">Category</h3>
+                  <h3 className="text-lg font-bold mb-2 font-baloo2">Select a style</h3>
                   <TagTypeDropdown
                     allFryTypes={allFryTypes}
                     selectedTags={typeTags}
@@ -355,29 +371,32 @@ export default function SearchPage() {
                     className="z-50"
                   />
                 </div>
-                {/* End fry type tags filter UI */}
               </div>
             </div>
           )}
         </div>
-        {/* No Results Message - shown directly below Filter container */}
+        {/* No Results Message */}
         {filteredLocations.length === 0 && (
           <div className="mb-6 overflow-hidden rounded-xl text-center py-12 px-6" style={{ borderWidth: '3px', borderStyle: 'solid', borderColor: 'black', backgroundColor: 'var(--light-blue-custom)' }}>
             <p className="text-gray-800 font-baloo2 text-lg">No locations match your filters. Try adjusting your criteria.</p>
           </div>
         )}
-        {/* Map Section */}
-        {filteredLocations.length > 0 && (
-          <div className="mb-6">
-            <LocationMap locations={locations} filteredLocations={filteredLocations} />
-          </div>
-        )}
         {/* Results Section */}
         {filteredLocations.length > 0 && (
           <>
-            <h2 className="text-lg font-bold mb-4 font-baloo2">Search Results</h2>
-            <div className="space-y-4 z-0 relative">
-              {filteredLocations.map((location) => (
+            <div className="flex items-center gap-3 mb-4">
+              <h2 className="text-4xl font-bold font-rouge-script" style={{ color: 'var(--yellow-custom)' }}>Search Results</h2>
+              {activeFiltersCount > 0 && (
+                <span
+                  className="px-2.5 py-1 text-sm font-bold rounded-full font-baloo2 whitespace-nowrap"
+                  style={{ backgroundColor: 'var(--red-custom)', color: 'var(--yellow-custom)' }}
+                >
+                  {activeFiltersCount} filter{activeFiltersCount !== 1 ? 's' : ''} applied
+                </span>
+              )}
+            </div>
+            <div className="overflow-hidden rounded-xl bg-white" style={{ borderWidth: '3px', borderStyle: 'solid', borderColor: 'black' }}>
+              {filteredLocations.slice(0, displayedCount).map((location, index) => (
                 <SearchResult
                   key={location.id}
                   location={location}
@@ -385,6 +404,7 @@ export default function SearchPage() {
                   createLocationSlug={createLocationSlug}
                   images={locationImages[location.name] || []}
                   expanded={expandedCard === location.id}
+                  isLast={index === Math.min(displayedCount, filteredLocations.length) - 1}
                   onExpand={() => {
                     setExpandedCard(expandedCard === location.id ? null : location.id);
                     if (!locationImages[location.name]) {
@@ -394,6 +414,19 @@ export default function SearchPage() {
                 />
               ))}
             </div>
+            {filteredLocations.length > displayedCount && (
+              <div className="flex items-center justify-center gap-4 mt-6">
+                <PrimaryButton onClick={() => setDisplayedCount(c => c + 8)} className="!px-6 !py-2">
+                  <span className="text-lg">Load more</span>
+                </PrimaryButton>
+                <button
+                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                  className="text-black font-bold underline font-quattrocento"
+                >
+                  Go to Top
+                </button>
+              </div>
+            )}
           </>
         )}
       </main>

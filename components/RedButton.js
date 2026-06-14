@@ -1,4 +1,4 @@
-export default function PrimaryButton({ children, onClick, type = 'button', disabled = false, className = '' }) {
+export default function RedButton({ children, onClick, type = 'button', disabled = false, className = '' }) {
   return (
     <button
       type={type}
@@ -8,9 +8,9 @@ export default function PrimaryButton({ children, onClick, type = 'button', disa
       style={{
         borderWidth: '3px',
         borderStyle: 'solid',
-        borderColor: 'var(--red-custom)',
-        backgroundColor: 'var(--yellow-custom)',
-        color: 'var(--red-custom)'
+        borderColor: 'black',
+        backgroundColor: 'var(--red-custom)',
+        color: 'var(--yellow-custom)'
       }}
     >
       <span className="text-2xl font-medium font-quattrocento underline whitespace-nowrap">
@@ -19,5 +19,3 @@ export default function PrimaryButton({ children, onClick, type = 'button', disa
     </button>
   );
 }
-
-

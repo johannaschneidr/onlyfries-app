@@ -1,12 +1,30 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, fetchSignInMethodsForEmail } from 'firebase/auth';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { auth, db } from '../../lib/firebase';
 import Navbar from '../../components/navbar';
 import MessageAlert from '../../components/MessageAlert';
 import PrimaryButton from '../../components/PrimaryButton';
-import SecondaryButton from '../../components/SecondaryButton';
+import TertiaryButton from '../../components/TertiaryButton';
+
+function getFriendlyError(code) {
+  switch (code) {
+    case 'auth/invalid-credential':
+    case 'auth/wrong-password':
+      return 'That password doesn\'t look right. Give it another shot or reset it below.';
+    case 'auth/too-many-requests':
+      return 'Too many failed attempts. Please wait a moment and try again.';
+    case 'auth/user-disabled':
+      return 'This account has been disabled. Please contact support.';
+    case 'auth/email-already-in-use':
+      return 'An account with this email already exists.';
+    case 'auth/weak-password':
+      return 'Password must be at least 6 characters long.';
+    default:
+      return 'Something went wrong. Please try again.';
+  }
+}
 
 export default function Verify() {
   const [password, setPassword] = useState('');
@@ -20,6 +38,7 @@ export default function Verify() {
   const router = useRouter();
   const { email, isNewUser: isNewUserParam, redirect } = router.query;
   const [isNewUser, setIsNewUser] = useState(isNewUserParam === 'true');
+  const [existingUsername, setExistingUsername] = useState('');
 
   useEffect(() => {
     if (!email) {
@@ -28,8 +47,15 @@ export default function Verify() {
       return;
     }
 
-    // Update isNewUser if the URL parameter changes
     setIsNewUser(isNewUserParam === 'true');
+
+    if (isNewUserParam !== 'true') {
+      const usersRef = collection(db, 'users');
+      const q = query(usersRef, where('email', '==', email));
+      getDocs(q).then(snap => {
+        if (!snap.empty) setExistingUsername(snap.docs[0].data().username || '');
+      });
+    }
   }, [email, isNewUserParam, router]);
 
   const checkUsernameExists = useCallback(async (username) => {
@@ -142,7 +168,7 @@ export default function Verify() {
           router.push('/');
         }
       } catch (error) {
-        setError(error.message);
+        setError(getFriendlyError(error.code));
       }
     } else {
       // Login flow
@@ -159,7 +185,7 @@ export default function Verify() {
           router.push('/');
         }
       } catch (error) {
-        setError(error.message);
+        setError(getFriendlyError(error.code));
       }
     }
   };
@@ -170,17 +196,19 @@ export default function Verify() {
     <>
       <Navbar />
       <main className="max-w-md mx-auto p-4">
-        <div className="bg-white rounded-xl p-6"
+        <h1 className="text-6xl font-bold font-rouge-script text-center text-white mb-8" style={{ lineHeight: '1' }}>
+          {isNewUser ? 'Create your account' : (
+            <>Welcome back{existingUsername ? <>,{' '}<span style={{ color: 'var(--light-blue-custom)' }}>{existingUsername}</span></> : ''}!</>
+          )}
+        </h1>
+        <div className="bg-white rounded-xl p-6 mb-8"
           style={{
             borderWidth: '3px',
             borderStyle: 'solid',
             borderColor: 'black'
           }}
         >
-          <h1 className="text-4xl font-bold mb-3 font-rouge-script" style={{ color: 'var(--blue-custom)' }}>
-            {isNewUser ? 'Create your account' : 'Welcome back'}
-          </h1>
-          <MessageAlert type="error" message={error} className="mb-4 mt-6" />
+          <MessageAlert type="error" message={error} className="mb-4" />
           <form onSubmit={handleAuth} className="space-y-6" noValidate>
           {isNewUser ? (
             <>
@@ -285,13 +313,13 @@ export default function Verify() {
                 >
                   Create Account
                 </PrimaryButton>
-                <SecondaryButton
+                <TertiaryButton
                   type="button"
                   onClick={() => router.push('/login')}
                   className="w-full"
                 >
                   Cancel
-                </SecondaryButton>
+                </TertiaryButton>
               </div>
             </>
           ) : (
@@ -350,13 +378,13 @@ export default function Verify() {
                 >
                   Continue
                 </PrimaryButton>
-                <SecondaryButton
+                <TertiaryButton
                   type="button"
                   onClick={() => router.push('/login')}
                   className="w-full"
                 >
                   Cancel
-                </SecondaryButton>
+                </TertiaryButton>
               </div>
             </>
           )}

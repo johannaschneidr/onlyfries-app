@@ -2,36 +2,39 @@ import { useState } from 'react';
 import Link from 'next/link';
 import CategoryAveragesDisplay from './CategoryAveragesDisplay';
 import ImageGallery from './ImageGallery';
+import RedButton from './RedButton';
 
-export default function SearchResult({ location, selectedCategories, createLocationSlug, images, expanded, onExpand }) {
+export default function SearchResult({ location, selectedCategories, createLocationSlug, images, expanded, onExpand, isLast }) {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
-  // Reset selected image when card is collapsed or images change
   if (!expanded && selectedImageIndex !== 0) setSelectedImageIndex(0);
 
   return (
     <div
-      className="overflow-hidden bg-white rounded-xl cursor-pointer"
-      style={{ borderWidth: '3px', borderStyle: 'solid', borderColor: 'black' }}
+      className="cursor-pointer"
+      style={!isLast ? { borderBottom: '3px solid black' } : {}}
       onClick={onExpand}
     >
       <div className="px-4 py-4">
-        <div className="flex items-start justify-between">
+        <div className="flex items-center justify-between">
           <div>
             <h3 className="text-xl font-semibold text-gray-800 font-baloo2">
               {location.name.split(',')[0]}
             </h3>
-            <p className="text-gray-500 font-baloo2">{location.totalPosts} reviews</p>
+            <p className="text-sm text-gray-500 font-baloo2 -mt-0.5">
+              {location.totalPosts} review{location.totalPosts !== 1 ? 's' : ''}
+            </p>
           </div>
-          <div className="flex items-center">
-            <span className="inline-flex items-center justify-center w-10 h-10 rounded-full text-black text-lg font-semibold font-baloo2" style={{ backgroundColor: 'var(--yellow-custom)' }}>
-              {location.overall ? Math.min(location.overall, 5).toFixed(1) : 'N/A'}
-            </span>
-          </div>
+          <span
+            className="w-10 h-10 flex items-center justify-center text-lg font-semibold text-black rounded-full font-baloo2 flex-shrink-0"
+            style={{ backgroundColor: 'var(--yellow-custom)' }}
+          >
+            {location.overall ? Math.min(location.overall, 5).toFixed(1) : 'N/A'}
+          </span>
         </div>
+
         {expanded && (
           <>
-            {/* Only show selected categories in expanded view */}
             {selectedCategories.length > 0 && (
               <div className="mt-4">
                 <CategoryAveragesDisplay
@@ -42,12 +45,12 @@ export default function SearchResult({ location, selectedCategories, createLocat
             <div className="flex items-center mt-4 w-full" style={{ gap: '16px' }}>
               <Link
                 href={`/location/${createLocationSlug(location.name)}`}
-                className="flex items-center justify-center transition-colors px-4 py-3 rounded-full flex-1 font-quattrocento underline uppercase"
-                style={{ 
+                className="flex items-center justify-center transition-colors px-4 py-3 rounded-full flex-1 font-quattrocento font-bold underline uppercase"
+                style={{
                   color: 'var(--red-custom)',
-                  borderWidth: '3px', 
-                  borderStyle: 'solid', 
-                  borderColor: 'var(--red-custom)' 
+                  borderWidth: '3px',
+                  borderStyle: 'solid',
+                  borderColor: 'var(--red-custom)'
                 }}
                 onClick={e => e.stopPropagation()}
               >
@@ -58,11 +61,11 @@ export default function SearchResult({ location, selectedCategories, createLocat
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center gap-1 text-black transition-colors px-4 py-3 rounded-full flex-1"
-                style={{ 
+                style={{
                   backgroundColor: 'white',
-                  borderWidth: '3px', 
-                  borderStyle: 'solid', 
-                  borderColor: 'black' 
+                  borderWidth: '3px',
+                  borderStyle: 'solid',
+                  borderColor: 'black'
                 }}
                 onClick={e => e.stopPropagation()}
               >
@@ -72,7 +75,6 @@ export default function SearchResult({ location, selectedCategories, createLocat
                 <span className="text-sm font-baloo2">Google Maps</span>
               </a>
             </div>
-            {/* Recent Images */}
             {images && images.length > 0 && (
               <div className="mt-4">
                 <ImageGallery
@@ -87,4 +89,4 @@ export default function SearchResult({ location, selectedCategories, createLocat
       </div>
     </div>
   );
-} 
+}

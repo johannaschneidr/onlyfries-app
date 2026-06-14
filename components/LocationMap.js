@@ -23,7 +23,7 @@ export default function LocationMap({ locations, filteredLocations }) {
     if (!isLoaded || !mapRef.current) return;
 
     const googleMap = new window.google.maps.Map(mapRef.current, {
-      center: { lat: 40.7128, lng: -74.0060 }, // Default to NYC
+      center: { lat: 40.7549, lng: -73.9950 }, // Default to Midtown Manhattan
       zoom: 12,
       minZoom: 11, // Prevent zooming out too far
       maxZoom: 18, // Prevent zooming in too close
@@ -32,7 +32,7 @@ export default function LocationMap({ locations, filteredLocations }) {
           north: 40.9176, // Northern boundary of NYC
           south: 40.4774, // Southern boundary of NYC
           east: -73.7004, // Eastern boundary of NYC
-          west: -74.2591  // Western boundary of NYC
+          west: -74.0479  // Western boundary — Hudson River, excludes NJ
         },
         strictBounds: true // Strictly enforce the bounds
       },
@@ -139,7 +139,7 @@ export default function LocationMap({ locations, filteredLocations }) {
   // Helper function to create cluster marker (no rating, just count)
   const createClusterMarker = (count) => {
     const markerSize = 50;
-    const markerColor = '#EA3323';
+    const markerColor = '#9CA3AF';
     const textColor = '#FFFFFF';
     
     const clusterSvg = `
@@ -172,7 +172,7 @@ export default function LocationMap({ locations, filteredLocations }) {
 
     if (locationsWithCoords.length === 0) {
       // If no locations with coordinates, center on default location
-      map.setCenter({ lat: 40.7128, lng: -74.0060 });
+      map.setCenter({ lat: 40.7549, lng: -73.9950 });
       map.setZoom(12);
       setClusterMarkers([]);
       return;
@@ -269,7 +269,7 @@ export default function LocationMap({ locations, filteredLocations }) {
               scaledSize: new window.google.maps.Size(markerSize, markerSize),
               anchor: new window.google.maps.Point(markerSize/2, markerSize/2)
             },
-            animation: window.google.maps.Animation.DROP,
+
             zIndex: Math.round(rating * 10)
           });
 

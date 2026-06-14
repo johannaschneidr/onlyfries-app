@@ -3,6 +3,7 @@ import { db } from '../lib/firebase';
 import { collection, query, where, orderBy, limit, getDocs, addDoc, deleteDoc, doc, onSnapshot } from 'firebase/firestore';
 import ImageGallery from './ImageGallery';
 import Link from 'next/link';
+import RedButton from './RedButton';
 import { sortLocationsByCompositeScore, sortLocationsByTrendingScore } from '../lib/bayesianRanking';
 import CategoryDisplay from './CategoryDisplay';
 
@@ -322,12 +323,12 @@ export default function Leaderboard() {
               <div className="flex items-center mt-2 mb-6 w-full" style={{ gap: '16px' }}>
                 <Link
                   href={`/location/${fry.name.split(',')[0].trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}`}
-                  className="flex items-center justify-center transition-colors px-4 py-3 rounded-full flex-1 font-quattrocento underline uppercase"
-                  style={{ 
+                  className="flex items-center justify-center transition-colors px-4 py-3 rounded-full flex-1 font-quattrocento font-bold underline uppercase"
+                  style={{
                     color: 'var(--red-custom)',
-                    borderWidth: '3px', 
-                    borderStyle: 'solid', 
-                    borderColor: 'var(--red-custom)' 
+                    borderWidth: '3px',
+                    borderStyle: 'solid',
+                    borderColor: 'var(--red-custom)'
                   }}
                   onClick={e => e.stopPropagation()}
                 >
