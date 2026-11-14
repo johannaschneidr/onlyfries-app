@@ -6,6 +6,7 @@ import { auth, db } from '../lib/firebase';
 import Navbar from '../components/navbar';
 import MessageAlert from '../components/MessageAlert';
 import PrimaryButton from '../components/PrimaryButton';
+import { trackEvent } from '../lib/analytics';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -88,6 +89,7 @@ export default function Login() {
           createdAt: new Date(),
           needsUsernameSetup: true
         });
+        trackEvent('sign_up', { method: 'google' });
         
         // Redirect to username setup page
         router.push({
@@ -100,6 +102,7 @@ export default function Login() {
       // Check if existing user has a valid username
       const userData = userDoc.data();
       if (!userData.username || !/^[a-z0-9]+$/.test(userData.username)) {
+        trackEvent('login', { method: 'google' });
         // User exists but doesn't have a valid username - redirect to setup
         router.push({
           pathname: '/auth/setup-username',
@@ -108,6 +111,7 @@ export default function Login() {
         return;
       }
       
+      trackEvent('login', { method: 'google' });
       // User exists and has valid username - proceed normally
       // Redirect based on the redirect parameter
       if (redirect === 'new') {

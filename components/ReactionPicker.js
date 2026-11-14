@@ -3,6 +3,7 @@ import { db } from '../lib/firebase';
 import { collection, addDoc, deleteDoc, query, where, getDocs } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
 import MessageAlert from './MessageAlert';
+import { trackEvent } from '../lib/analytics';
 
 export default function ReactionPicker({ postId, onReactionAdded, hideGifButton = false, openLoginModal }) {
   const [showGifSearch, setShowGifSearch] = useState(false);
@@ -54,6 +55,7 @@ export default function ReactionPicker({ postId, onReactionAdded, hideGifButton 
       if (!existingReaction.empty) {
         await deleteDoc(existingReaction.docs[0].ref);
         setFireCount(prev => prev - 1);
+        trackEvent('reaction_removed', { reaction_type: 'fire' });
         setHasVoted(false);
       } else {
         await addDoc(reactionsRef, {
@@ -64,6 +66,7 @@ export default function ReactionPicker({ postId, onReactionAdded, hideGifButton 
           username: user.displayName || 'Anonymous'
         });
         setFireCount(prev => prev + 1);
+        trackEvent('reaction_added', { reaction_type: 'fire' });
         setHasVoted(true);
       }
     } catch (error) {
@@ -137,6 +140,7 @@ export default function ReactionPicker({ postId, onReactionAdded, hideGifButton 
         username: user.displayName || 'Anonymous'
       };
 
+      trackEvent('reaction_added', { reaction_type: 'gif' });
       onReactionAdded(newReaction);
       setSearchQuery('');
       setGifs([]);

@@ -8,6 +8,7 @@ import Navbar from '../../components/navbar';
 import MessageAlert from '../../components/MessageAlert';
 import PrimaryButton from '../../components/PrimaryButton';
 import SecondaryButton from '../../components/SecondaryButton';
+import { trackEvent } from '../../lib/analytics';
 
 export default function DeleteAccount() {
   const { user } = useAuth();
@@ -106,6 +107,7 @@ export default function DeleteAccount() {
 
       // Delete user account
       await deleteUser(user);
+      trackEvent('account_deleted');
       
       // Redirect to home page
       router.push('/');

@@ -4,6 +4,7 @@ import Footer from '../components/Footer';
 import DesktopWarning from '../components/DesktopWarning';
 import '../global.css'
 import Script from 'next/script'
+import useAnalytics from '../hooks/useAnalytics'
 import { Baloo_2, Rouge_Script, Quattrocento } from 'next/font/google'
 
 // Configure your fonts
@@ -40,6 +41,8 @@ const quattrocento = Quattrocento({
 // The API key is stored in NEXT_PUBLIC_GOOGLE_MAPS_API_KEY environment variable
 // The 'beforeInteractive' strategy ensures the script loads before the page becomes interactive
 function MyApp({ Component, pageProps }) {
+  useAnalytics();
+
   return (
     <AuthProvider>
       <UsernameGuard>

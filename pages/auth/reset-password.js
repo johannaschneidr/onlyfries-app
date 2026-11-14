@@ -6,6 +6,7 @@ import Navbar from '../../components/navbar';
 import MessageAlert from '../../components/MessageAlert';
 import PrimaryButton from '../../components/PrimaryButton';
 import TertiaryButton from '../../components/TertiaryButton';
+import { trackEvent } from '../../lib/analytics';
 
 export default function ResetPassword() {
   const router = useRouter();
@@ -26,6 +27,7 @@ export default function ResetPassword() {
 
     try {
       await sendPasswordResetEmail(auth, emailInput);
+      trackEvent('password_reset_requested');
       setSuccess('Password reset email sent! Please check your inbox.');
       setTimeout(() => {
         router.push('/login');

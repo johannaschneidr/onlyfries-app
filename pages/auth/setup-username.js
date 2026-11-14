@@ -8,6 +8,7 @@ import Navbar from '../../components/navbar';
 import MessageAlert from '../../components/MessageAlert';
 import PrimaryButton from '../../components/PrimaryButton';
 import SecondaryButton from '../../components/SecondaryButton';
+import { trackEvent } from '../../lib/analytics';
 
 export default function SetupUsername() {
   const { user } = useAuth();
@@ -245,6 +246,7 @@ export default function SetupUsername() {
 
       // Mark as completed to prevent cleanup
       isCompletedRef.current = true;
+      trackEvent('setup_username_complete');
 
       // Redirect based on the redirect parameter
       if (redirect === 'new') {
