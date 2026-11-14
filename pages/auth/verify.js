@@ -7,6 +7,7 @@ import Navbar from '../../components/navbar';
 import MessageAlert from '../../components/MessageAlert';
 import PrimaryButton from '../../components/PrimaryButton';
 import TertiaryButton from '../../components/TertiaryButton';
+import { trackEvent } from '../../lib/analytics';
 
 function getFriendlyError(code) {
   switch (code) {
@@ -161,6 +162,7 @@ export default function Verify() {
         await setDoc(doc(db, 'usernames', username), {
           userId: userCredential.user.uid
         });
+        trackEvent('sign_up', { method: 'password' });
         // Redirect based on the redirect parameter
         if (redirect === 'new') {
           router.push('/new');
@@ -178,6 +180,7 @@ export default function Verify() {
           return;
         }
         await signInWithEmailAndPassword(auth, email, password);
+        trackEvent('login', { method: 'password' });
         // Redirect based on the redirect parameter
         if (redirect === 'new') {
           router.push('/new');

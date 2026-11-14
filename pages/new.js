@@ -1,7 +1,13 @@
 import Navbar from '../components/navbar';
 import PostForm from '../components/postform';
+import { useEffect } from 'react';
+import { trackEvent } from '../lib/analytics';
 
 export default function NewPost() {
+  useEffect(() => {
+    trackEvent('review_started');
+  }, []);
+
   return (
     <>
       <Navbar />

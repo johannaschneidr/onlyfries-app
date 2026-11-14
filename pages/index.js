@@ -12,6 +12,7 @@ import RedButton from '../components/RedButton';
 import MessageAlert from '../components/MessageAlert';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
+import { trackEvent } from '../lib/analytics';
 
 export default function Home() {
   const router = useRouter();
@@ -65,6 +66,7 @@ export default function Home() {
   };
 
   const loadMore = () => {
+    trackEvent('load_more_clicked', { posts_shown: displayedPostsCount });
     setDisplayedPostsCount(prev => prev + 10);
   };
 

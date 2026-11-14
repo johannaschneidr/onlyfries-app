@@ -6,6 +6,7 @@ import Link from 'next/link';
 import RedButton from './RedButton';
 import { sortLocationsByCompositeScore, sortLocationsByTrendingScore } from '../lib/bayesianRanking';
 import CategoryDisplay from './CategoryDisplay';
+import { trackEvent } from '../lib/analytics';
 
 export default function Leaderboard() {
   const [topFries, setTopFries] = useState([]);
@@ -14,6 +15,10 @@ export default function Leaderboard() {
   const [locationImages, setLocationImages] = useState({});
   const [selectedImageIndex, setSelectedImageIndex] = useState({});
   const [activeTab, setActiveTab] = useState('best-overall');
+  const selectTab = (tab) => {
+    if (tab !== activeTab) trackEvent('feed_tab_selected', { tab });
+    setActiveTab(tab);
+  };
 
   const fetchLocationImages = async (locationName) => {
     try {
@@ -213,7 +218,7 @@ export default function Leaderboard() {
     <div>
       <div className="flex">
         <button
-          onClick={() => setActiveTab('best-overall')}
+          onClick={() => selectTab('best-overall')}
           className={`flex-1 text-base font-medium whitespace-nowrap px-4 py-2 font-baloo2 ${
             activeTab === 'best-overall' ? 'text-gray-800' : 'text-black'
           }`}
@@ -234,7 +239,7 @@ export default function Leaderboard() {
           Best Overall
         </button>
         <button
-          onClick={() => setActiveTab('trending')}
+          onClick={() => selectTab('trending')}
           className={`flex-1 text-base font-medium whitespace-nowrap px-4 py-2 font-baloo2 ${
             activeTab === 'trending' ? 'text-gray-800' : 'text-black'
           }`}
@@ -256,7 +261,7 @@ export default function Leaderboard() {
           Trending
         </button>
         <button
-          onClick={() => setActiveTab('most-reviewed')}
+          onClick={() => selectTab('most-reviewed')}
           className={`flex-1 text-base font-medium whitespace-nowrap px-4 py-2 font-baloo2 ${
             activeTab === 'most-reviewed' ? 'text-gray-800' : 'text-black'
           }`}

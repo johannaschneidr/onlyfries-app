@@ -9,6 +9,7 @@ import { collection, query as firestoreQuery, where, orderBy, limit, getDocs } f
 import { db } from '../lib/firebase';
 import TagTypeDropdown from '../components/TagTypeDropdown';
 import PrimaryButton from '../components/PrimaryButton';
+import { trackEvent } from '../lib/analytics';
 
 const ratingDescriptors = {
   length: {
@@ -184,6 +185,10 @@ export default function SearchPage() {
   }, [filters, locations, typeTags]);
 
   const handleFilterChange = (category, value) => {
+    trackEvent('filter_applied', {
+      filter_category: category,
+      filter_value: value === filters[category] ? 0 : value,
+    });
     setFilters(prev => ({
       ...prev,
       [category]: value === prev[category] ? 0 : value
@@ -261,6 +266,7 @@ export default function SearchPage() {
   };
   const addTag = (type) => {
     if (!typeTags.includes(type.value)) {
+      trackEvent('search', { search_term: type.value });
       setTypeTags(prev => [...prev, type.value]);
     }
     setTagInput('');

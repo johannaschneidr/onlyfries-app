@@ -9,6 +9,7 @@ import { useRouter } from 'next/router';
 import { useGoogleMaps } from '../hooks/useGoogleMaps';
 import { useAuth } from '../contexts/AuthContext';
 import MessageAlert from './MessageAlert';
+import { trackEvent, trackException, locationLabel } from '../lib/analytics';
 
 export default function PostForm() {
   // Add ratingDescriptors at the top level
@@ -517,9 +518,11 @@ export default function PostForm() {
   const submitPost = async () => {
     setLoading(true);
     setError('');
+    let stage = 'upload';
 
     try {
       const imageUrl = await uploadImage(image);
+      stage = 'save';
       const postData = {
         ...formData,
         imageUrl,
@@ -534,6 +537,13 @@ export default function PostForm() {
       const postsRef = collection(db, 'posts');
       const postDoc = await addDoc(postsRef, postData);
       console.log('Post document created with ID:', postDoc.id);
+      trackEvent('review_submitted', {
+        location_name: locationLabel(formData.locationName),
+        rating: Number(formData.overall) || undefined,
+        fry_type: formData.types[0],
+        fry_type_count: formData.types.length,
+      });
+      stage = 'location_stats';
 
       // Update location stats
       const locationsRef = collection(db, 'locations');
@@ -684,6 +694,7 @@ export default function PostForm() {
           clearTimeout(moderationTimeout);
           unsubscribe();
           setLoading(false);
+          trackEvent('review_removed_by_moderation');
           setShowModerationModal(true);
         }
       });
@@ -695,6 +706,8 @@ export default function PostForm() {
 
     } catch (error) {
       console.error('Error in handleSubmit:', error);
+      trackEvent('review_failed', { stage, error_code: error?.code || 'unknown' });
+      if (stage === 'upload') trackException('image_upload_failed');
       setError('Error submitting post. Please try again.');
       setLoading(false);
     }
